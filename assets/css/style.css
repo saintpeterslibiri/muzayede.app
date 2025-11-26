@@ -1,0 +1,390 @@
+/* ============ RESET & GENEL ============ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* DALGALI ARKAPLAN + GENEL BODY AYARLARI */
+body {
+    background: linear-gradient(135deg, #c7d9ff 0%, #f5f7ff 40%, #c2d4ff 100%);
+    background-attachment: fixed;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    color: #1f2933;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Arka planda daha belirgin mavi dalgalar */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -10%;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(5, 22, 80, 0.45) 0%, transparent 55%),
+        radial-gradient(circle at 100% 10%, rgba(5, 22, 80, 0.5) 0%, transparent 55%),
+        radial-gradient(circle at 10% 90%, rgba(5, 22, 80, 0.45) 0%, transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(5, 22, 80, 0.45) 0%, transparent 55%);
+    z-index: -1;
+    pointer-events: none;
+    filter: blur(25px);
+    opacity: 0.9;
+}
+
+/* Linkler */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Buton benzeri linkler */
+.btn-primary,
+.btn-small,
+button {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* ============ NAVBAR ============ */
+.navbar {
+    background: #051650;
+    color: white;
+    padding: 12px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar .logo a {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.navbar .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.navbar .nav-links li a {
+    color: #cfd9ff;
+    font-size: 14px;
+}
+
+.navbar .nav-links li a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* ============ GENEL SAYFA LAYOUT ============ */
+.page {
+    max-width: 1100px;
+    margin: 30px auto 40px auto;
+    padding: 0 16px;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+
+.page-header p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Footer */
+.footer {
+    margin-top: 40px;
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #e3e7ff;
+    border-top: 1px solid #c5c8dd;
+    background: #051650;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+/* ============ ANA BÜYÜK KUTU (index için) ============ */
+.home-container {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 30px 26px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    margin-top: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+/* ============ HERO (index) ============ */
+.hero {
+    background: transparent;
+    border-radius: 0;
+    padding: 0 0 24px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.hero h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #4b5563;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-primary {
+    background: #051650;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #031136;
+}
+
+.btn-secondary { /* gri olanlar değismiyor */
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+/* ============ INDEX SEARCH SECTION ============ */
+.search-section {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.search-section h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.search-section p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.search-form input,
+.search-form select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    min-width: 180px;
+}
+
+.search-form button {
+    background: #051650;
+    color: white;
+}
+
+.search-form button:hover {
+    background: #031136;
+}
+
+/* ============ AUCTION KARTLARI ============ */
+.page-section {
+    margin-top: 20px;
+}
+
+.page-section h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.page-section p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.auction-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+}
+
+.auction-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auction-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #e5e7eb;
+}
+
+.auction-card .time-left {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.btn-small {
+    background: #051650;
+    color: white;
+    font-size: 13px;
+    padding: 6px 10px;
+    margin-top: 4px;
+}
+
+.btn-small:hover {
+    background: #031136;
+}
+
+/* ============ FİLTRE FORMU (auctions.php için) ============ */
+.filters {
+    margin-bottom: 20px;
+}
+
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-form input,
+.filter-form select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.filter-form button {
+    background: #051650;
+    color: white;
+}
+
+.filter-form button:hover {
+    background: #031136;
+}
+
+/* ============ AUCTION DETAIL ============ */
+.auction-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 24px;
+}
+
+.auction-main {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.auction-image img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #e5e7eb;
+    margin-bottom: 12px;
+}
+
+.auction-info h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+/* Sağ taraf: bid alanı */
+.auction-actions section {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.auction-actions h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* ============ AUTH SAYFALARI ============ */
+.auth-page {
+    display: flex;
+    justify-content: center;
+}
+
+.auth-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 380px;
+    margin-top: 40px;
+    padding: 24px 22px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .navbar .nav-links {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .page {
+        padding: 0 12px;
+        margin-top: 20px;
+    }
+
+    .auction-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .home-container {
+        padding: 20px 16px;
+    }
+}
