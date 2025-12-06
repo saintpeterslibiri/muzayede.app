@@ -8,27 +8,38 @@
 
         <!-- DYNAMIC: hata mesajı -->
         <!--
-        <?php if(isset($error)) : ?>
-            <p class="error"><?php echo $error; ?></p>
+        <?php if (isset($error)) : ?>
+            <p class="error-message"><?php echo $error; ?></p>
         <?php endif; ?>
         -->
 
-        <form method="POST">
+        <form method="POST" class="auth-form" autocomplete="on">
             <label>
                 Username or Email
-                <input type="text" name="username" required>
+                <input type="text" name="username" required autocomplete="username">
             </label>
 
             <label>
                 Password
-                <input type="password" name="password" required>
+                <input type="password" name="password" required autocomplete="current-password">
             </label>
 
-            <button type="submit">Login</button>
+            <div class="auth-extra">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember_me">
+                    <span>Remember me</span>
+                </label>
+
+                <!-- İleride gerçek sayfa eklersen href'i güncelleyebilirsin -->
+                <a href="forgot_password.php" class="auth-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn-primary">Login</button>
         </form>
 
         <p class="auth-switch">
-            Don't have an account? <a href="register.php">Register</a>
+            Don't have an account?
+            <a href="register.php" class="auth-link-strong">Register</a>
         </p>
     </section>
 </main>

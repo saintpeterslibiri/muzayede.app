@@ -1,6 +1,9 @@
 <nav class="navbar">
     <div class="logo">
-        <a href="index.php">Auction</a>
+        <a href="index.php">
+            <img src="assets/img/logo.png" alt="Logo" class="nav-logo">
+            Auction
+        </a>
     </div>
 
     <ul class="nav-links">

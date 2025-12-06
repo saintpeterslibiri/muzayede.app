@@ -80,4 +80,35 @@
 
 </main>
 
+<!-- BOŞ ARAMA UYARISI İÇİN JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.search-form');
+    if (!form) return;
+
+    const searchInput = form.querySelector('input[name="q"]');
+    if (!searchInput) return;
+
+    const defaultPlaceholder = searchInput.getAttribute('placeholder') || '';
+
+    form.addEventListener('submit', function (e) {
+        if (searchInput.value.trim() === '') {
+            e.preventDefault(); // formu göndermeyi engelle
+            searchInput.value = '';
+            searchInput.placeholder = 'Please enter a search term';
+            searchInput.classList.add('input-warning');
+            searchInput.focus();
+        }
+    });
+
+    // Kullanıcı yazmaya başlayınca uyarıyı temizle
+    searchInput.addEventListener('input', function () {
+        if (searchInput.classList.contains('input-warning')) {
+            searchInput.classList.remove('input-warning');
+            searchInput.placeholder = defaultPlaceholder;
+        }
+    });
+});
+</script>
+
 <?php include 'includes/footer.php'; ?>

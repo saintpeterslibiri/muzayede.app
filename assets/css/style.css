@@ -6,54 +6,133 @@
 }
 
 /* DALGALI ARKAPLAN + GENEL BODY AYARLARI */
+/* ===== MODERN INFINITE BACKGROUND ===== */
 body {
-    background: linear-gradient(135deg, #c7d9ff 0%, #f5f7ff 40%, #c2d4ff 100%);
+    background: 
+        linear-gradient(135deg, #c7d9ff 0%, #eef2ff 40%, #c2d4ff 100%);
     background-attachment: fixed;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #1f2933;
     position: relative;
     overflow-x: hidden;
 }
 
-/* Arka planda daha belirgin mavi dalgalar */
+/* Soft Waves + Noise Texture Layer */
 body::before {
     content: "";
     position: fixed;
-    inset: -10%;
-    background:
-        radial-gradient(circle at 0% 0%, rgba(5, 22, 80, 0.45) 0%, transparent 55%),
-        radial-gradient(circle at 100% 10%, rgba(5, 22, 80, 0.5) 0%, transparent 55%),
-        radial-gradient(circle at 10% 90%, rgba(5, 22, 80, 0.45) 0%, transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(5, 22, 80, 0.45) 0%, transparent 55%);
+    inset: 0;
     z-index: -1;
     pointer-events: none;
-    filter: blur(25px);
-    opacity: 0.9;
+    opacity: 0.35;
+
+    background:
+        /* Subtle abstract wave noise */
+        url("..assets/img/bg.png") repeat,
+
+        /* Soft navy glow waves */
+        radial-gradient(circle at 20% 30%, rgba(5, 22, 80, 0.25) 0%, transparent 55%),
+        radial-gradient(circle at 80% 20%, rgba(5, 22, 80, 0.18) 0%, transparent 60%),
+        radial-gradient(circle at 25% 80%, rgba(5, 22, 80, 0.22) 0%, transparent 55%),
+        radial-gradient(circle at 90% 75%, rgba(5, 22, 80, 0.20) 0%, transparent 60%);
+    
+    background-size:
+        500px 500px,   /* noise texture scaling */
+        auto, auto, auto, auto; /* glow waves */
+    
+    filter: blur(18px); /* soft blending */
 }
 
-/* Linkler */
-a {
+
+/* ============ LINKLER ============ */
+a,
+a:link,
+a:visited {
     color: inherit;
-    text-decoration: none;
+    text-decoration: none !important;
 }
 
-a:hover {
-    text-decoration: underline;
+a:hover,
+a:focus,
+a:active {
+    text-decoration: none !important;
 }
 
-/* Buton benzeri linkler */
+/* ============ BUTON BENZERİ LİNKLER ============ */
 .btn-primary,
+.btn-secondary,
 .btn-small,
 button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px 18px;
     border-radius: 6px;
     border: none;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    text-decoration: none;
+    margin: 5px;
+}
+
+/* PRIMARY BUTTON */
+.btn-primary {
+    background: #051650;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.btn-primary:link,
+.btn-primary:visited,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    color: #ffffff !important;
+}
+
+.btn-primary:hover {
+    background: #031136;
+}
+
+/* SECONDARY BUTTON */
+.btn-secondary { /* gri olanlar */
+    background: #e5e7eb;
+    color: #111827 !important;
+    text-decoration: none !important;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:link,
+.btn-secondary:visited,
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    color: #111827 !important;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+/* SMALL BUTTON */
+.btn-small {
+    background: #051650;
+    color: #ffffff !important;
+    font-size: 13px;
+    padding: 6px 10px;
+    margin-top: 4px;
+}
+
+.btn-small:link,
+.btn-small:visited,
+.btn-small:hover,
+.btn-small:focus,
+.btn-small:active {
+    color: #ffffff !important;
+}
+
+.btn-small:hover {
+    background: #031136;
 }
 
 /* ============ NAVBAR ============ */
@@ -64,12 +143,6 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.navbar .logo a {
-    font-size: 22px;
-    font-weight: 700;
-    color: #ffffff;
 }
 
 .navbar .nav-links {
@@ -83,9 +156,27 @@ button {
     font-size: 14px;
 }
 
+/* hover’da underline YOK, sadece renk değişimi */
 .navbar .nav-links li a:hover {
-    color: white;
-    text-decoration: underline;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* LOGO + ICON */
+.nav-logo {
+    height: 32px;        /* logo boyutu */
+    width: auto;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 20px;
+    color: #ffffff;
 }
 
 /* ============ GENEL SAYFA LAYOUT ============ */
@@ -93,6 +184,7 @@ button {
     max-width: 1100px;
     margin: 30px auto 40px auto;
     padding: 0 16px;
+    padding-bottom: 40px; /* footer için boşluk */
 }
 
 .page-header {
@@ -124,13 +216,13 @@ button {
     width: 100%;
 }
 
-/* ============ ANA BÜYÜK KUTU (index için) ============ */
+/* ============ ANA BÜYÜK KUTU (index, auctions, create) ============ */
 .home-container {
     background: #ffffff;
     border-radius: 14px;
-    padding: 30px 26px;
+    padding: 30px 30px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-    margin-top: 20px;
+    margin: 20px 20px;
     border: 1px solid #e5e7eb;
 }
 
@@ -157,24 +249,6 @@ button {
 .hero-actions {
     display: flex;
     gap: 10px;
-}
-
-.btn-primary {
-    background: #051650;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #031136;
-}
-
-.btn-secondary { /* gri olanlar değismiyor */
-    background: #e5e7eb;
-    color: #111827;
-}
-
-.btn-secondary:hover {
-    background: #d1d5db;
 }
 
 /* ============ INDEX SEARCH SECTION ============ */
@@ -220,6 +294,17 @@ button {
     background: #031136;
 }
 
+/* BOŞ ARAMA UYARISI İÇİN CLASS */
+.input-warning {
+    border-color: #f97373;
+}
+
+.input-warning::placeholder {
+    color: rgba(185, 28, 28, 0.35); /* kırmızının çok hafif hali */
+    font-weight: 400;
+    font-style: italic;
+}
+
 /* ============ AUCTION KARTLARI ============ */
 .page-section {
     margin-top: 20px;
@@ -231,6 +316,12 @@ button {
 }
 
 .page-section p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.section-subtitle {
     font-size: 14px;
     color: #6b7280;
     margin-bottom: 16px;
@@ -265,16 +356,11 @@ button {
     color: #6b7280;
 }
 
-.btn-small {
-    background: #051650;
-    color: white;
-    font-size: 13px;
-    padding: 6px 10px;
-    margin-top: 4px;
-}
-
-.btn-small:hover {
-    background: #031136;
+.no-auctions {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
 }
 
 /* ============ FİLTRE FORMU (auctions.php için) ============ */
@@ -305,6 +391,98 @@ button {
     background: #031136;
 }
 
+/* ============ PAGINATION ============ */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    margin-bottom: 4px;
+}
+
+.page-link {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    font-size: 13px;
+    color: #111827;
+    text-decoration: none;
+}
+
+.page-link:hover {
+    background: #f3f4f6;
+}
+
+.page-link.active {
+    background: #051650;
+    color: #ffffff;
+    border-color: #051650;
+}
+
+.page-ellipsis {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* ============ CREATE AUCTION FORM ============ */
+.form-section {
+    margin-top: 10px;
+}
+
+.auction-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.auction-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.auction-form input[type="text"],
+.auction-form input[type="number"],
+.auction-form input[type="datetime-local"],
+.auction-form select,
+.auction-form textarea {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.auction-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.auction-form .full-width {
+    width: 100%;
+}
+
+.form-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.success-message {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #ecfdf5;
+    color: #166534;
+    font-size: 14px;
+}
+
 /* ============ AUCTION DETAIL ============ */
 .auction-detail {
     display: grid;
@@ -333,7 +511,13 @@ button {
     margin-bottom: 6px;
 }
 
-/* Sağ taraf: bid alanı */
+/* Sağ taraf: bid alanları genel kutu */
+.auction-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .auction-actions section {
     background: #ffffff;
     border-radius: 10px;
@@ -344,6 +528,52 @@ button {
 .auction-actions h3 {
     font-size: 16px;
     margin-bottom: 10px;
+}
+
+/* Bid formları */
+.bid-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.bid-form input[type="number"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+/* Mesajlar */
+.message {
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.message.info {
+    color: #1d4ed8; /* mavi uyarı */
+}
+
+.message.small {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Bid history listesi */
+.bid-history ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bid-history li {
+    font-size: 13px;
+    color: #374151;
 }
 
 /* ============ AUTH SAYFALARI ============ */
@@ -387,4 +617,393 @@ button {
     .home-container {
         padding: 20px 16px;
     }
+
+    .nav-logo {
+        height: 28px;
+    }
 }
+/* ============ TABLO SAYFALARI (My Auctions, My Bids vb.) ============ */
+.table-section {
+    margin-top: 10px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table thead {
+    background: #f3f4f6;
+}
+
+.data-table th,
+.data-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table th {
+    font-weight: 600;
+    color: #374151;
+}
+
+.data-table tr:hover {
+    background: #f9fafb;
+}
+.warning-banner {
+    background: #fff3cd;
+    color: #7a5b00;
+    padding: 12px 16px;
+    border: 1px solid #ffe8a1;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.warning-banner .warning-link {
+    margin-left: 8px;
+    font-weight: 600;
+    color: #b45309 !important;
+    text-decoration: underline !important;
+}
+
+.warning-banner .warning-link:hover {
+    color: #92400e !important;
+}
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.profile-form h2 {
+    font-size: 18px;
+    margin: 10px 0 4px;
+    color: #111827;
+}
+
+.profile-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.profile-form input[type="text"],
+.profile-form input[type="email"],
+.profile-form input[type="password"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+}
+/* ============ PROFILE LAYOUT ============ */
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr);
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* SOL KART (avatar + basic info) */
+.profile-sidebar {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 18px 16px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.avatar-wrapper {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 3px solid rgba(5, 22, 80, 0.15);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eff6ff, #e5e7eb);
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-basic-info {
+    text-align: center;
+}
+
+.profile-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.profile-username {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* Avatar upload butonu */
+.avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.avatar-upload-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+}
+
+.avatar-upload-label input[type="file"] {
+    display: none;
+}
+
+.avatar-upload-label:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.avatar-hint {
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+/* Profil mini istatistik kartları */
+.profile-stats {
+    margin-top: 10px;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.stat-item {
+    flex: 1;
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* SAĞ TARAF (profil düzenleme formu) */
+.profile-main {
+    width: 100%;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.profile-form h2 {
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.profile-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.profile-form input[type="text"],
+.profile-form input[type="email"],
+.profile-form input[type="password"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+    background: #ffffff;
+}
+
+.profile-form input[readonly] {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-sidebar {
+        order: 1;
+    }
+
+    .profile-main {
+        order: 2;
+    }
+
+    .profile-stats {
+        flex-direction: row;
+        gap: 6px;
+    }
+}
+/* ============ LOGIN / REGISTER SAYFALARI ============ */
+
+.auth-card h1 {
+    font-size: 24px;
+    margin-bottom: 4px;
+    color: #111827;
+}
+
+.auth-card > p {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 18px;
+}
+
+/* Login form düzeni */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Inputlar tam genişlik ve modern görünüm */
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
+}
+
+/* Remember me + Forgot password satırı */
+.auth-extra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.remember-me input {
+    width: 14px;
+    height: 14px;
+}
+
+/* Link stilleri */
+.auth-link {
+    font-size: 13px;
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+    color: #1e40af;
+}
+
+.auth-link-strong {
+    font-weight: 600;
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+.auth-link-strong:hover {
+    text-decoration: underline;
+    color: #1e40af;
+}
+
+/* Alt kısım: "Don't have an account?" */
+.auth-switch {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+    color: #4b5563;
+}
+
+/* Hata mesajı (isteğe bağlı) */
+.error-message {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 14px;
+    border: 1px solid #fecaca;
+}
+
