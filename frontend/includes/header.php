@@ -10,3 +10,5 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>

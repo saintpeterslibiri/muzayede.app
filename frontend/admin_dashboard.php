@@ -40,7 +40,7 @@
                 <tr>
                     <td>exampleuser</td>
                     <td>user@example.com</td>
-                    <td>seller</td>
+                    <td>user</td>
                     <td>active</td>
                     <td>
                         <button class="btn-small">Ban</button>
