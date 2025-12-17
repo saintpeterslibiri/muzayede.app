@@ -1,9 +1,19 @@
-<?php include 'includes/header.php'; ?>
-<?php include 'includes/navbar.php'; ?>
+<?php
+include 'includes/header.php';
+include 'includes/navbar.php';
+require_once 'includes/api_client.php';
+
+// ---- Featured auctions çek ----
+$response = api_get('/auctions?limit=3&sort=ending_soon');
+
+$featuredAuctions = [];
+if (is_array($response) && isset($response['success']) && $response['success'] === true) {
+    $featuredAuctions = $response['data']['auctions'] ?? [];
+}
+?>
 
 <main class="page">
 
-    <!-- BÜYÜK CONTAINER BAŞLANGIÇ -->
     <div class="home-container">
 
         <!-- HERO -->
@@ -30,6 +40,9 @@
                     <option value="">All Categories</option>
                     <option value="electronics">Electronics</option>
                     <option value="collectibles">Collectibles</option>
+                    <option value="fashion">Fashion</option>
+                    <option value="home">Home</option>
+                    <option value="sports">Sports</option>
                     <option value="other">Other</option>
                 </select>
 
@@ -46,69 +59,36 @@
         <!-- FEATURED AUCTIONS -->
         <section class="page-section">
             <h2>Featured Auctions</h2>
-            <p>Here are some example auctions. Later this section will be filled dynamically from the database.</p>
+            <p>Hot items ending soon - don't miss out!</p>
 
             <div class="auction-list">
-                <article class="auction-card">
-                    <img src="assets/img/placeholder.png" alt="Example item">
-                    <h3>Example Laptop</h3>
-                    <p>Current bid: $450</p>
-                    <p class="time-left">Time left: 03:25:10</p>
-                    <a href="auction_detail.php" class="btn-small">View Details</a>
-                </article>
-
-                <article class="auction-card">
-                    <img src="assets/img/placeholder.png" alt="Example item">
-                    <h3>Vintage Watch</h3>
-                    <p>Current bid: $180</p>
-                    <p class="time-left">Time left: 01:12:45</p>
-                    <a href="auction_detail.php" class="btn-small">View Details</a>
-                </article>
-
-                <article class="auction-card">
-                    <img src="assets/img/placeholder.png" alt="Example item">
-                    <h3>Gaming Headset</h3>
-                    <p>Current bid: $75</p>
-                    <p class="time-left">Time left: 05:02:30</p>
-                    <a href="auction_detail.php" class="btn-small">View Details</a>
-                </article>
+                <?php if (empty($featuredAuctions)): ?>
+                    <p>No active auctions at the moment.</p>
+                <?php else: ?>
+                    <?php foreach ($featuredAuctions as $auction): ?>
+                        <?php
+                            $id = $auction['id'] ?? '';
+                            $title = $auction['title'] ?? 'Untitled';
+                            $price = $auction['current_price'] ?? 0;
+                            $endTime = $auction['end_time'] ?? '';
+                            $img = $auction['image_path'] ?? 'assets/img/placeholder.png';
+                        ?>
+                        <article class="auction-card">
+                            <img src="<?php echo htmlspecialchars($img ?: 'assets/img/placeholder.png'); ?>" alt="<?php echo htmlspecialchars($title); ?>">
+                            <h3><?php echo htmlspecialchars($title); ?></h3>
+                            <p>Current bid: $<?php echo number_format((float)$price, 2); ?></p>
+                            <p class="time-left">
+                                <?php echo $endTime ? 'Ends: ' . htmlspecialchars($endTime) : ''; ?>
+                            </p>
+                            <a href="auction_detail.php?id=<?php echo urlencode($id); ?>" class="btn-small">View Details</a>
+                        </article>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </section>
 
     </div>
-    <!-- BÜYÜK CONTAINER BİTİŞ -->
 
 </main>
-
-<!-- BOŞ ARAMA UYARISI İÇİN JS -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('.search-form');
-    if (!form) return;
-
-    const searchInput = form.querySelector('input[name="q"]');
-    if (!searchInput) return;
-
-    const defaultPlaceholder = searchInput.getAttribute('placeholder') || '';
-
-    form.addEventListener('submit', function (e) {
-        if (searchInput.value.trim() === '') {
-            e.preventDefault(); // formu göndermeyi engelle
-            searchInput.value = '';
-            searchInput.placeholder = 'Please enter a search term';
-            searchInput.classList.add('input-warning');
-            searchInput.focus();
-        }
-    });
-
-    // Kullanıcı yazmaya başlayınca uyarıyı temizle
-    searchInput.addEventListener('input', function () {
-        if (searchInput.classList.contains('input-warning')) {
-            searchInput.classList.remove('input-warning');
-            searchInput.placeholder = defaultPlaceholder;
-        }
-    });
-});
-</script>
 
 <?php include 'includes/footer.php'; ?>
