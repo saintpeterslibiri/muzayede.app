@@ -156,6 +156,7 @@ if (is_array($response) && isset($response['success']) && $response['success'] =
                         <th>Item</th>
                         <th>Winning Bid</th>
                         <th>Result</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,7 +169,7 @@ if (is_array($response) && isset($response['success']) && $response['success'] =
 
                     <?php elseif (empty($wonBids)): ?>
                         <tr>
-                            <td colspan="3" style="text-align:center; padding:20px; color:#6b7280;">
+                            <td colspan="4" style="text-align:center; padding:20px; color:#6b7280;">
                                 You haven't won any auctions yet.
                             </td>
                         </tr>
@@ -179,6 +180,9 @@ if (is_array($response) && isset($response['success']) && $response['success'] =
                                 $auctionId = $bid['auction_id'] ?? '';
                                 $title = $bid['title'] ?? 'Untitled';
                                 $myBid = $bid['my_highest_bid'] ?? 0;
+
+                                $completeUrl = 'order_complete.php?auction_id=' . urlencode($auctionId)
+                                             . '&amount=' . urlencode((string)$myBid);
                             ?>
                             <tr>
                                 <td>
@@ -189,6 +193,11 @@ if (is_array($response) && isset($response['success']) && $response['success'] =
                                 <td>$<?php echo number_format((float)$myBid, 2); ?></td>
                                 <td>
                                     <span class="status-badge status-won">Won</span>
+                                </td>
+                                <td>
+                                    <a href="<?php echo $completeUrl; ?>" class="btn btn-primary btn-sm">
+                                        Complete Order
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

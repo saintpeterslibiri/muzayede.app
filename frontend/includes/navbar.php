@@ -15,5 +15,6 @@
         <li><a href="profile.php">Profile</a></li>
         <li><a href="login.php">Login</a></li>
         <li><a href="register.php">Register</a></li>
+        <li><a href="my_orders.php">My Orders</a></li>
     </ul>
 </nav>
