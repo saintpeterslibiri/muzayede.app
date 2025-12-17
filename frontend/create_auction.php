@@ -2,104 +2,90 @@
 session_start();
 ?>
 
-<?php include 'includes/header.php'; ?>
-<?php include 'includes/navbar.php'; ?>
+<?php
+include 'includes/header.php';
+include 'includes/navbar.php';
+require_once 'includes/api_client.php';
+
+$successMsg = null;
+$errorMsg   = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Form verilerini al
+    $data = [
+        'title'          => $_POST['title'] ?? '',
+        'description'    => $_POST['description'] ?? '',
+        'category'       => $_POST['category'] ?? '',
+        'starting_price' => (float)($_POST['starting_price'] ?? 0),
+        'start_time'     => date('Y-m-d H:i:s'), // Hemen başlasın
+        'end_time'       => $_POST['end_time'] ?? ''
+    ];
+
+    // API'ye gönder
+    $response = api_post("/auctions", $data);
+
+    if (isset($response['success']) && $response['success'] === true) {
+        $successMsg = "Auction created successfully!";
+    } else {
+        $errorMsg = $response['message'] ?? $response['error'] ?? "Failed to create auction.";
+    }
+}
+?>
 
 <main class="page">
-
     <div class="home-container">
-
-        <!-- LOGIN UYARISI (Giriş yapılmamışsa görünür) -->
-        <?php if (!isset($_SESSION['user_id'])): ?>
-            <div class="warning-banner">
-                You must be logged in to create an auction.
-                <a href="login.php" class="warning-link">Login here</a>
-            </div>
-        <?php endif; ?>
-
-        <!-- SAYFA BAŞLIĞI -->
         <section class="page-header">
             <h1>Create New Auction</h1>
-            <p>Fill in the details to start a new auction.</p>
+            <p>Fill in the details to list your item.</p>
         </section>
 
-        <!-- FORM BÖLÜMÜ -->
+        <?php if ($successMsg): ?>
+            <p class="success-message"><?php echo htmlspecialchars($successMsg); ?></p>
+        <?php endif; ?>
+
+        <?php if ($errorMsg): ?>
+            <p class="error-message"><?php echo htmlspecialchars($errorMsg); ?></p>
+        <?php endif; ?>
+
         <section class="form-section">
-
-            <!-- Successful message (optional) -->
-            <!--
-            <?php if(isset($success)) : ?>
-                <p class="success-message"><?php echo $success; ?></p>
-            <?php endif; ?>
-            -->
-
-            <form method="POST" enctype="multipart/form-data" class="auction-form">
-
-                <label>
-                    Item Title
-                    <input type="text" name="title" 
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?> 
-                        required>
-                </label>
-
-                <label>
-                    Category
-                    <select name="category" 
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?> 
-                        required>
-                        <option value="">Select a category</option>
-                        <option value="electronics">Electronics</option>
-                        <option value="collectibles">Collectibles</option>
-                        <option value="other">Other</option>
-                    </select>
-                </label>
-
-                <label class="full-width">
-                    Description
-                    <textarea name="description" rows="4" 
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?> 
-                        required></textarea>
-                </label>
-
-                <label>
-                    Starting Price ($)
-                    <input type="number" name="starting_price" step="0.01" min="0"
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?>
-                        required>
-                </label>
-
-                <label>
-                    Start Time
-                    <input type="datetime-local" name="start_time"
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?>
-                        required>
-                </label>
-
-                <label>
-                    End Time
-                    <input type="datetime-local" name="end_time"
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?>
-                        required>
-                </label>
-
-                <label class="full-width">
-                    Item Image
-                    <input type="file" name="image" accept="image/*"
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?>>
-                </label>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary"
-                        <?php if (!isset($_SESSION['user_id'])) echo "disabled"; ?>>
-                        Create Auction
-                    </button>
+            <form method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="title">Item Title</label>
+                    <input type="text" id="title" name="title" required placeholder="e.g. Vintage Watch">
                 </div>
 
-            </form>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="collectibles">Collectibles</option>
+                        <option value="fashion">Fashion</option>
+                        <option value="home">Home</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
+                <div class="form-group">
+                    <label for="starting_price">Starting Price ($)</label>
+                    <input type="number" id="starting_price" name="starting_price" step="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="end_time">End Date & Time</label>
+                    <input type="datetime-local" id="end_time" name="end_time" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="5" placeholder="Describe your item..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Create Auction</button>
+            </form>
         </section>
     </div>
-
 </main>
 
 <?php include 'includes/footer.php'; ?>

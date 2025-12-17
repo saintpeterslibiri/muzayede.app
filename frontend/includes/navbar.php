@@ -21,7 +21,6 @@ if ($avatar_path) {
 }
 $avatar_initial = strtoupper(substr($username, 0, 1));
 ?>
-
 <nav class="navbar">
     <div class="logo">
         <a href="index.php">
