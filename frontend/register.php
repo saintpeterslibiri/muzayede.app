@@ -108,3 +108,12 @@ include 'includes/navbar.php';
 </main>
 
 <?php include 'includes/footer.php'; ?>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="login.php" class="auth-link-strong">Login</a>
+        </p>
+    </section>
+</main>
+
+<?php include 'includes/footer.php'; ?>

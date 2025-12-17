@@ -25,4 +25,3 @@ pool.getConnection()
     });
 
 module.exports = pool;
-

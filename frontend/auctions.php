@@ -1,78 +1,52 @@
-<?php include 'includes/header.php'; ?>
-<?php include 'includes/navbar.php'; ?>
+<?php
+include 'includes/header.php';
+include 'includes/navbar.php';
+require_once 'includes/api_client.php';
+
+// API'den tüm açık artırmaları çek
+$response = api_get("/auctions");
+$auctions = [];
+
+if (isset($response['success']) && $response['success'] === true) {
+    // Backend { success:true, data: { auctions: [...] } } dönüyor olabilir
+    $auctions = $response['data']['auctions'] ?? $response['data'] ?? [];
+}
+?>
 
 <main class="page">
-
-    <!-- BEYAZ KART BAŞLANGIÇ -->
     <div class="home-container">
-
-        <!-- SAYFA BAŞLIĞI -->
         <section class="page-header">
             <h1>All Auctions</h1>
-            <p>Browse all active auctions and place your bids in real-time.</p>
+            <p>Browse and bid on active items.</p>
         </section>
 
-        <!-- FİLTRE FORMU -->
-        <section class="filters">
-            <form class="filter-form" method="GET">
-                <input type="text" name="q" placeholder="Search items...">
-
-                <select name="category">
-                    <option value="">All Categories</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="collectibles">Collectibles</option>
-                    <option value="other">Other</option>
-                </select>
-
-                <select name="sort">
-                    <option value="ending_soon">Ending Soon</option>
-                    <option value="newest">Newest</option>
-                    <option value="highest_bid">Highest Bid</option>
-                </select>
-
-                <button type="submit">Filter</button>
-            </form>
+        <section class="auction-grid">
+            <?php if (empty($auctions)): ?>
+                <p>No active auctions found.</p>
+            <?php else: ?>
+                <?php foreach ($auctions as $item): ?>
+                    <?php
+                        $id      = $item['id'] ?? 0;
+                        $title   = $item['title'] ?? 'No Title';
+                        $price   = $item['current_price'] ?? $item['starting_price'] ?? 0;
+                        $endTime = $item['end_time'] ?? '';
+                        $image   = (!empty($item['image_path'])) ? $item['image_path'] : 'assets/img/placeholder.png';
+                    ?>
+                    <div class="auction-card">
+                        <div class="card-image">
+                            <img src="<?php echo htmlspecialchars($image); ?>" alt="Item">
+                        </div>
+                        <div class="card-content">
+                            <h3><?php echo htmlspecialchars($title); ?></h3>
+                            <p class="price">Current Bid: $<?php echo number_format((float)$price, 2); ?></p>
+                            <p class="time">Ends: <?php echo htmlspecialchars($endTime); ?></p>
+                            <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-secondary">View Details</a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </section>
-
-        <!-- AUCTION LİSTESİ -->
-        <section class="auction-list">
-            <article class="auction-card">
-                <img src="assets/img/placeholder.png" alt="">
-                <h2>Example Phone</h2>
-                <p>Current bid: $320</p>
-                <p class="time-left">Time left: 02:15:30</p>
-                <a href="auction_detail.php" class="btn-small">View Details</a>
-            </article>
-
-            <article class="auction-card">
-                <img src="assets/img/placeholder.png" alt="">
-                <h2>Gaming Console</h2>
-                <p>Current bid: $500</p>
-                <p class="time-left">Time left: 00:45:10</p>
-                <a href="auction_detail.php" class="btn-small">View Details</a>
-            </article>
-
-            <article class="auction-card">
-                <img src="assets/img/placeholder.png" alt="">
-                <h2>Collectible Figure</h2>
-                <p>Current bid: $90</p>
-                <p class="time-left">Time left: 04:12:05</p>
-                <a href="auction_detail.php" class="btn-small">View Details</a>
-            </article>
-        </section>
-
-        <!-- PAGINATION (KART İÇİNDE) -->
-        <nav class="pagination">
-            <a href="?page=1" class="page-link active">1</a>
-            <a href="?page=2" class="page-link">2</a>
-            <a href="?page=3" class="page-link">3</a>
-            <span class="page-ellipsis">...</span>
-            <a href="?page=10" class="page-link">10</a>
-        </nav>
-
     </div>
-    <!-- BEYAZ KART BİTİŞ -->
-
 </main>
 
 <?php include 'includes/footer.php'; ?>
