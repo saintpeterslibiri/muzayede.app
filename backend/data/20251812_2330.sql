@@ -1,0 +1,42 @@
+-- ============================================
+-- Migration: Align Database Schema with Code
+-- ============================================
+
+USE muzayede_db;
+
+-- ============================================
+-- AUCTIONS TABLE CHANGES
+-- ============================================
+-- 1. Make 'category_id' nullable so it doesn't block inserts when using 'category' string
+-- 2. Make 'description' nullable as the code allows null
+-- 3. Update 'status' ENUM to include 'pending'
+-- 4. Rename 'current_highest_bid' to 'current_price' to match code
+-- 5. Add 'category' string column
+
+ALTER TABLE auctions 
+    MODIFY COLUMN category_id INT NULL,
+    MODIFY COLUMN description TEXT NULL,
+    MODIFY COLUMN status ENUM('draft', 'pending', 'active', 'ended', 'closed', 'cancelled') DEFAULT 'draft';
+
+-- Rename current_highest_bid to current_price (if current_highest_bid exists)
+-- Note: If current_price already exists, this will fail - you may need to drop current_price first
+ALTER TABLE auctions 
+    CHANGE COLUMN current_highest_bid current_price DECIMAL(10, 2) DEFAULT NULL;
+
+-- Add category string column (if it doesn't exist, this will fail - ignore if already exists)
+ALTER TABLE auctions 
+    ADD COLUMN category VARCHAR(50) NULL AFTER category_id;
+
+-- Update existing rows to have a category string if possible (optional)
+UPDATE auctions a 
+JOIN categories c ON a.category_id = c.id 
+SET a.category = c.slug 
+WHERE a.category IS NULL AND a.category_id IS NOT NULL;
+
+-- ============================================
+-- BIDS TABLE CHANGES
+-- ============================================
+-- Rename 'bid_amount' to 'amount' to match code
+
+ALTER TABLE bids 
+    CHANGE COLUMN bid_amount amount DECIMAL(10, 2) NOT NULL;
