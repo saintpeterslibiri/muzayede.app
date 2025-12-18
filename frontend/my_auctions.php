@@ -8,7 +8,7 @@ include 'includes/navbar.php';
 require_once 'includes/api_client.php';
 
 // API'den kullanıcının kendi açık artırmalarını çek
-$response = api_get("/profile/auctions");
+$response = api_get("/my/auctions");
 $myAuctions = [];
 
 if (isset($response['success']) && $response['success'] === true) {

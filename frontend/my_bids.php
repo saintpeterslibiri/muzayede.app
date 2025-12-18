@@ -5,11 +5,19 @@ include 'includes/navbar.php';
 require_once 'includes/api_client.php';
 
 // API'den kullanıcının tekliflerini çek
-$response = api_get("/profile/bids");
+$response = api_get("/my/bids");
 $myBids = [];
 
 if (isset($response['success']) && $response['success'] === true) {
-    $myBids = $response['data']['bids'] ?? $response['data'] ?? [];
+    // Backend'den active, won, lost kategorilerinde geliyor
+    // Hepsini birleştirip gösterelim
+    $data = $response['data'] ?? [];
+    $activeBids = $data['active'] ?? [];
+    $wonBids = $data['won'] ?? [];
+    $lostBids = $data['lost'] ?? [];
+    
+    // Tüm teklifleri birleştir (aktif olanlar önce)
+    $myBids = array_merge($activeBids, $wonBids, $lostBids);
 }
 ?>
 
@@ -42,11 +50,12 @@ if (isset($response['success']) && $response['success'] === true) {
                         <?php foreach ($myBids as $bid): ?>
                             <?php
                                 $id      = $bid['auction_id'] ?? 0;
-                                $title   = $bid['auction_title'] ?? 'No Title';
-                                $myAmt   = $bid['amount'] ?? 0;
+                                $title   = $bid['title'] ?? 'No Title';
+                                $myAmt   = $bid['my_highest_bid'] ?? 0;
                                 $current = $bid['current_price'] ?? 0;
                                 $end     = $bid['end_time'] ?? '';
-                                $isHigh  = ($myAmt >= $current);
+                                $bidStatus = $bid['bid_status'] ?? '';
+                                $isLeading = $bid['is_leading'] ?? false;
                             ?>
                             <tr>
                                 <td><strong><?php echo htmlspecialchars($title); ?></strong></td>
@@ -54,10 +63,16 @@ if (isset($response['success']) && $response['success'] === true) {
                                 <td>$<?php echo number_format((float)$current, 2); ?></td>
                                 <td><?php echo htmlspecialchars($end); ?></td>
                                 <td>
-                                    <?php if ($isHigh): ?>
+                                    <?php if ($bidStatus === 'leading'): ?>
                                         <span class="status-badge active">Highest Bidder</span>
-                                    <?php else: ?>
+                                    <?php elseif ($bidStatus === 'outbid'): ?>
                                         <span class="status-badge outbid">Outbid</span>
+                                    <?php elseif ($bidStatus === 'won'): ?>
+                                        <span class="status-badge won">Won</span>
+                                    <?php elseif ($bidStatus === 'lost'): ?>
+                                        <span class="status-badge lost">Lost</span>
+                                    <?php else: ?>
+                                        <span class="status-badge">Active</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
