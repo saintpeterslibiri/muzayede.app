@@ -11,17 +11,15 @@ $successMsg = null;
 $errorMsg   = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Form verilerini al
     $data = [
         'title'          => $_POST['title'] ?? '',
         'description'    => $_POST['description'] ?? '',
         'category'       => $_POST['category'] ?? '',
         'starting_price' => (float)($_POST['starting_price'] ?? 0),
-        'start_time'     => date('Y-m-d H:i:s'), // Hemen başlasın
+        'start_time'     => date('Y-m-d H:i:s'),
         'end_time'       => $_POST['end_time'] ?? ''
     ];
 
-    // API'ye gönder
     $response = api_post("/auctions", $data);
 
     if (isset($response['success']) && $response['success'] === true) {
@@ -78,6 +76,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="form-group">
+                    <label>Item Image</label>
+                    <input type="file" id="imageInput" name="image" accept="image/*" hidden>
+                    <button type="button" class="btn-secondary" id="pickImageBtn" style="width:100%; margin:0;">
+                        Choose Image
+                    </button>
+                    <div id="imageChosenText" style="margin-top:8px; font-size:13px; color:#6b7280; display:none;"></div>
+                </div>
+
+                <div class="form-group">
                     <label for="description">Description</label>
                     <textarea id="description" name="description" rows="5" placeholder="Describe your item..."></textarea>
                 </div>
@@ -87,5 +94,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </section>
     </div>
 </main>
+
+<script>
+  const pickBtn = document.getElementById('pickImageBtn');
+  const input = document.getElementById('imageInput');
+  const chosenText = document.getElementById('imageChosenText');
+
+  if (pickBtn && input) {
+    pickBtn.addEventListener('click', () => input.click());
+
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) {
+        chosenText.style.display = 'none';
+        chosenText.textContent = '';
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        input.value = '';
+        chosenText.style.display = 'none';
+        chosenText.textContent = '';
+        return;
+      }
+
+      chosenText.textContent = 'Selected: ' + file.name;
+      chosenText.style.display = 'block';
+    });
+  }
+</script>
 
 <?php include 'includes/footer.php'; ?>

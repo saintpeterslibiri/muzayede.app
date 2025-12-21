@@ -7,7 +7,6 @@ include 'includes/header.php';
 include 'includes/navbar.php';
 require_once 'includes/api_client.php';
 
-// API'den kullanıcının kendi açık artırmalarını çek
 $response = api_get("/my/auctions");
 $myAuctions = [];
 
@@ -18,7 +17,7 @@ if (isset($response['success']) && $response['success'] === true) {
 
 <main class="page">
     <div class="home-container">
-        <!-- GİRİŞ YAPMAMIŞ KULLANICI İÇİN UYARI -->
+
         <?php if (!isset($_SESSION['user_id'])): ?>
             <div class="warning-banner">
                 ⚠️ You must be logged in to manage your auctions.
@@ -26,13 +25,11 @@ if (isset($response['success']) && $response['success'] === true) {
             </div>
         <?php endif; ?>
 
-        <!-- SAYFA BAŞLIĞI -->
         <section class="page-header">
             <h1>My Auctions</h1>
             <p>Manage the items you have listed for sale.</p>
         </section>
 
-        <!-- TABLO BÖLÜMÜ -->
         <section class="data-table-section">
             <?php if (empty($myAuctions)): ?>
                 <div class="empty-state">
@@ -62,13 +59,30 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $status  = $item['status'] ?? 'Active';
                             ?>
                             <tr>
-                                <td><strong><?php echo htmlspecialchars($title); ?></strong></td>
+                                <td>
+                                    <div class="table-item">
+                                        <img
+                                            src="assets/img/placeholder.png"
+                                            alt="Item"
+                                            class="table-thumb"
+                                        >
+                                        <strong class="table-title">
+                                            <?php echo htmlspecialchars($title); ?>
+                                        </strong>
+                                    </div>
+                                </td>
                                 <td>$<?php echo number_format((float)$start, 2); ?></td>
                                 <td>$<?php echo number_format((float)$current, 2); ?></td>
                                 <td><?php echo htmlspecialchars($end); ?></td>
-                                <td><span class="status-badge <?php echo strtolower($status); ?>"><?php echo htmlspecialchars($status); ?></span></td>
                                 <td>
-                                    <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">View</a>
+                                    <span class="status-badge <?php echo strtolower($status); ?>">
+                                        <?php echo htmlspecialchars($status); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">
+                                        View
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -76,6 +90,7 @@ if (isset($response['success']) && $response['success'] === true) {
                 </table>
             <?php endif; ?>
         </section>
+
     </div>
 </main>
 
