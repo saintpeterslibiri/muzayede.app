@@ -79,6 +79,29 @@ $starting    = $auction['starting_price'] ?? 0;
 $current     = $auction['current_price'] ?? $starting;
 $endTime     = $auction['end_time'] ?? '';
 $imgPath     = (!empty($auction['image_path'])) ? $auction['image_path'] : 'assets/img/placeholder.png';
+$sellerUsername =
+    $auction['username'] ??
+    $auction['seller_username'] ??
+    $auction['owner_username'] ??
+    $auction['created_by_username'] ??
+    ($auction['user']['username'] ?? null) ??
+    ($auction['seller']['username'] ?? null) ??
+    null;
+
+$sellerId =
+    $auction['user_id'] ??
+    $auction['seller_id'] ??
+    $auction['owner_id'] ??
+    ($auction['user']['id'] ?? null) ??
+    ($auction['seller']['id'] ?? null) ??
+    null;
+
+$sellerProfileHref = null;
+if (!empty($sellerId)) {
+    $sellerProfileHref = 'seller_profile.php?user_id=' . urlencode((string)$sellerId);
+} elseif (!empty($sellerUsername)) {
+    $sellerProfileHref = 'seller_profile.php?username=' . urlencode((string)$sellerUsername);
+}
 ?>
 
 <main class="page">
@@ -106,20 +129,43 @@ $imgPath     = (!empty($auction['image_path'])) ? $auction['image_path'] : 'asse
                 </div>
 
                 <div class="auction-info">
-                    <h2><?php echo htmlspecialchars($title); ?></h2>
-                    <p class="category">Category: <?php echo htmlspecialchars($category); ?></p>
-
+                    <div class="auction-top">
+                        <h2><?php echo htmlspecialchars($title); ?></h2>
+                        
+                        <div class="auction-badges">
+                            <span class="badge">Category: <?php echo htmlspecialchars($category); ?></span>
+                        
+                            <?php if ($sellerProfileHref && $sellerUsername): ?>
+                                <span class="badge">
+                                    Seller:
+                                    <a class="seller-link" href="<?php echo htmlspecialchars($sellerProfileHref); ?>">
+                                        @<?php echo htmlspecialchars((string)$sellerUsername); ?>
+                                    </a>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                            
                     <?php if ($description !== ''): ?>
                         <p class="description"><?php echo htmlspecialchars($description); ?></p>
                     <?php endif; ?>
-
-                    <p>Starting price: $<?php echo htmlspecialchars(number_format((float)$starting, 2)); ?></p>
-                    <p>Current highest bid: <strong>$<?php echo htmlspecialchars(number_format((float)$current, 2)); ?></strong></p>
-
-                    <p class="time-left">
-                        Ends at:
-                        <span><?php echo $endTime ? htmlspecialchars($endTime) : 'N/A'; ?></span>
-                    </p>
+                    
+                    <div class="auction-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Starting price</span>
+                            <span class="stat-value">$<?php echo htmlspecialchars(number_format((float)$starting, 2)); ?></span>
+                        </div>
+                    
+                        <div class="stat-row">
+                            <span class="stat-label">Current highest bid</span>
+                            <span class="stat-value strong">$<?php echo htmlspecialchars(number_format((float)$current, 2)); ?></span>
+                        </div>
+                    
+                        <div class="stat-row">
+                            <span class="stat-label">Ends at</span>
+                            <span class="stat-value"><?php echo $endTime ? htmlspecialchars($endTime) : 'N/A'; ?></span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +192,6 @@ $imgPath     = (!empty($auction['image_path'])) ? $auction['image_path'] : 'asse
 
                 <section class="auto-bid">
                     <h3>Set Auto-Bid</h3>
-
                     <form method="POST" class="bid-form">
                         <input
                             type="number"

@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -19,11 +17,6 @@ const { authenticate, isAdmin } = require('./middleware/auth');
 
 const app = express();
 const PORT = config.server.port || 3000;
-
-//for mail-notification
-require('dotenv').config();
-const auctionScheduler = require('./services/auctionScheduler');
-
 
 // Middleware
 app.use(cors());
@@ -84,5 +77,4 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    auctionScheduler.startScheduler();
 });

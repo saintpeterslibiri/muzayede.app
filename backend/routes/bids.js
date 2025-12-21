@@ -1,11 +1,11 @@
 // =====================================================
-// BIDS.JS - Bid Route Handlers (with Email Notifications)
+// BIDS.JS - Bid Route Handlers
 // =====================================================
 // Handles all bid-related operations:
 // - Get bids for an auction
-// - Place a new bid (+ email notifications)
+// - Place a new bid
 // - Set auto-bid
-// - Process auto-bid logic (+ email notifications)
+// - Process auto-bid logic
 // =====================================================
 
 
@@ -16,9 +16,6 @@
 const db = require('../config/database');
 const response = require('../utils/response');
 const validation = require('../utils/validation');
-
-// Mail Service for notifications
-const mailService = require('../services/mailService');
 
 
 // -----------------------------------------------------
@@ -105,17 +102,14 @@ async function getBidsByAuction(req, res) {
 //   - Bid must be higher than current price
 //   - User cannot bid on their own auction
 //   - Updates auction's current_price
-//
-// Email notifications:
-//   - Notifies seller about new bid
-//   - Notifies previous highest bidder that they were outbid
 
 async function placeBid(req, res) {
     try {
         const auctionId = req.params.id;
         const { amount } = req.body;
         
-        // Get actual user ID from auth
+        // TODO: Get actual user ID from auth
+        // For testing, use buyer1 (id: 3)
         const userId = req.user?.id || 3;
         
         // -------------------------------------------------
@@ -182,20 +176,6 @@ async function placeBid(req, res) {
         }
         
         // -------------------------------------------------
-        // Get previous highest bidder (for outbid notification)
-        // -------------------------------------------------
-        
-        const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
-            FROM bids 
-            WHERE auction_id = ? 
-            ORDER BY amount DESC 
-            LIMIT 1
-        `, [auctionId]);
-        
-        const previousHighestBidder = previousHighestBid.length > 0 ? previousHighestBid[0] : null;
-        
-        // -------------------------------------------------
         // Insert the bid
         // -------------------------------------------------
         
@@ -214,20 +194,6 @@ async function placeBid(req, res) {
             'UPDATE auctions SET current_price = ? WHERE id = ?',
             [bidAmount, auctionId]
         );
-        
-        // -------------------------------------------------
-        // 📧 SEND EMAIL NOTIFICATIONS (async, don't await)
-        // -------------------------------------------------
-        
-        // 1. Notify seller about new bid
-        mailService.notifySellerNewBid(auctionId, bidAmount, userId)
-            .catch(err => console.error('Failed to send seller notification:', err));
-        
-        // 2. Notify previous highest bidder that they were outbid
-        if (previousHighestBidder && previousHighestBidder.user_id !== userId) {
-            mailService.notifyOutbid(auctionId, previousHighestBidder.user_id, bidAmount)
-                .catch(err => console.error('Failed to send outbid notification:', err));
-        }
         
         // -------------------------------------------------
         // Process auto-bids from other users
@@ -256,7 +222,8 @@ async function placeBid(req, res) {
         
         response.sendSuccess(res, {
             bid: newBid[0],
-            currentPrice: updatedAuction[0].current_price
+            newCurrentPrice: updatedAuction[0].current_price,
+            message: 'Bid placed successfully'
         }, 'Bid placed successfully', 201);
         
     } catch (error) {
@@ -269,17 +236,18 @@ async function placeBid(req, res) {
 // -----------------------------------------------------
 // POST /api/auctions/:id/auto-bid - Set auto-bid
 // -----------------------------------------------------
-// Sets maximum bid amount for automatic bidding
-//
 // Required in request body:
-//   - max_amount: Maximum amount user is willing to bid
+//   - max_amount: Maximum amount for auto-bidding
+//
+// Auto-bid automatically places bids on behalf of user
+// whenever someone else bids, up to max_amount
 
 async function setAutoBid(req, res) {
     try {
         const auctionId = req.params.id;
         const { max_amount } = req.body;
         
-        // Get actual user ID from auth
+        // TODO: Get actual user ID from auth
         const userId = req.user?.id || 3;
         
         // -------------------------------------------------
@@ -338,20 +306,6 @@ async function setAutoBid(req, res) {
         }
         
         // -------------------------------------------------
-        // Get previous highest bidder (for outbid notification)
-        // -------------------------------------------------
-        
-        const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
-            FROM bids 
-            WHERE auction_id = ? 
-            ORDER BY amount DESC 
-            LIMIT 1
-        `, [auctionId]);
-        
-        const previousHighestBidder = previousHighestBid.length > 0 ? previousHighestBid[0] : null;
-        
-        // -------------------------------------------------
         // Insert or update auto-bid
         // -------------------------------------------------
         // UNIQUE constraint on (user_id, auction_id) ensures one auto-bid per user per auction
@@ -386,20 +340,6 @@ async function setAutoBid(req, res) {
                 'UPDATE auctions SET current_price = ? WHERE id = ?',
                 [initialBid, auctionId]
             );
-            
-            // -------------------------------------------------
-            // 📧 SEND EMAIL NOTIFICATIONS
-            // -------------------------------------------------
-            
-            // Notify seller about new bid
-            mailService.notifySellerNewBid(auctionId, initialBid, userId)
-                .catch(err => console.error('Failed to send seller notification:', err));
-            
-            // Notify previous highest bidder
-            if (previousHighestBidder && previousHighestBidder.user_id !== userId) {
-                mailService.notifyOutbid(auctionId, previousHighestBidder.user_id, initialBid)
-                    .catch(err => console.error('Failed to send outbid notification:', err));
-            }
             
             // Process other auto-bids (may trigger bidding war)
             await processAutoBids(auctionId, userId, initialBid);
@@ -496,18 +436,6 @@ async function processAutoBids(auctionId, excludeUserId, currentBidAmount) {
         );
         
         console.log(`Auto-bid placed: User ${highestAutoBid.user_id} bid $${newBidAmount} on auction ${auctionId}`);
-        
-        // -------------------------------------------------
-        // 📧 SEND OUTBID NOTIFICATION
-        // -------------------------------------------------
-        // The user who was just outbid by auto-bid should be notified
-        
-        mailService.notifyOutbid(auctionId, excludeUserId, newBidAmount)
-            .catch(err => console.error('Failed to send auto-bid outbid notification:', err));
-        
-        // Also notify seller about the new auto-bid
-        mailService.notifySellerNewBid(auctionId, newBidAmount, highestAutoBid.user_id)
-            .catch(err => console.error('Failed to send seller auto-bid notification:', err));
         
         // -------------------------------------------------
         // Check if original bidder has auto-bid too
