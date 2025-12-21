@@ -4,19 +4,14 @@ include 'includes/header.php';
 include 'includes/navbar.php';
 require_once 'includes/api_client.php';
 
-// API'den kullanıcının tekliflerini çek
 $response = api_get("/my/bids");
 $myBids = [];
 
 if (isset($response['success']) && $response['success'] === true) {
-    // Backend'den active, won, lost kategorilerinde geliyor
-    // Hepsini birleştirip gösterelim
     $data = $response['data'] ?? [];
     $activeBids = $data['active'] ?? [];
     $wonBids = $data['won'] ?? [];
     $lostBids = $data['lost'] ?? [];
-    
-    // Tüm teklifleri birleştir (aktif olanlar önce)
     $myBids = array_merge($activeBids, $wonBids, $lostBids);
 }
 ?>
@@ -55,13 +50,25 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $current = $bid['current_price'] ?? 0;
                                 $end     = $bid['end_time'] ?? '';
                                 $bidStatus = $bid['bid_status'] ?? '';
-                                $isLeading = $bid['is_leading'] ?? false;
                             ?>
                             <tr>
-                                <td><strong><?php echo htmlspecialchars($title); ?></strong></td>
+                                <td>
+                                    <div class="table-item">
+                                        <img
+                                            src="assets/img/placeholder.png"
+                                            alt="Item"
+                                            class="table-thumb"
+                                        >
+                                        <strong class="table-title">
+                                            <?php echo htmlspecialchars($title); ?>
+                                        </strong>
+                                    </div>
+                                </td>
+
                                 <td>$<?php echo number_format((float)$myAmt, 2); ?></td>
                                 <td>$<?php echo number_format((float)$current, 2); ?></td>
                                 <td><?php echo htmlspecialchars($end); ?></td>
+
                                 <td>
                                     <?php if ($bidStatus === 'leading'): ?>
                                         <span class="status-badge active">Highest Bidder</span>
@@ -75,8 +82,11 @@ if (isset($response['success']) && $response['success'] === true) {
                                         <span class="status-badge">Active</span>
                                     <?php endif; ?>
                                 </td>
+
                                 <td>
-                                    <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">View Item</a>
+                                    <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">
+                                        View Item
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

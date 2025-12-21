@@ -24,8 +24,8 @@ $avatar_initial = strtoupper(substr($username, 0, 1));
 <nav class="navbar">
     <div class="logo">
         <a href="index.php">
-            <img src="assets/img/logo.png" alt="Logo" class="nav-logo">
-            Auction
+            <img src="assets/img/logoN.png" alt="AADuction" class="nav-logo">
+            
         </a>
     </div>
 
