@@ -4,7 +4,8 @@
  * Backend API ile iletişim için yardımcı fonksiyonlar
  */
 
-define('API_BASE_URL', 'http://localhost:3000/api');
+$apiBase = getenv('API_BASE_URL') ?: 'http://localhost:3000/api';
+define('API_BASE_URL', $apiBase);
 
 /**
  * API'ye istek gönder
