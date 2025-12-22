@@ -21,17 +21,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     $files = [];
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $files['image'] = $_FILES['image'];
-        $response = api_post_multipart("/auctions", $data, $files);
-    } else {
-        $response = api_post("/auctions", $data);
+    $uploadError = null;
+
+    if (isset($_FILES['image'])) {
+        if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $files['image'] = $_FILES['image'];
+        } elseif ($_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            // Dosya yükleme hatası (boyut, izin vb.)
+            $errorMap = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in HTML form',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload',
+            ];
+            $uploadError = $errorMap[$_FILES['image']['error']] ?? 'Unknown upload error: ' . $_FILES['image']['error'];
+        }
     }
 
-    if (isset($response['success']) && $response['success'] === true) {
-        $successMsg = "Auction created successfully!";
+    if ($uploadError) {
+        $errorMsg = $uploadError;
     } else {
-        $errorMsg = $response['message'] ?? $response['error'] ?? "Failed to create auction.";
+        if (!empty($files)) {
+            $response = api_post_multipart("/auctions", $data, $files);
+        } else {
+            $response = api_post("/auctions", $data);
+        }
+
+        if (isset($response['success']) && $response['success'] === true) {
+            $successMsg = "Auction created successfully!";
+        } else {
+            $errorMsg = $response['message'] ?? $response['error'] ?? "Failed to create auction.";
+        }
     }
 }
 ?>
