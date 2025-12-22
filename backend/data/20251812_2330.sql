@@ -18,10 +18,6 @@ ALTER TABLE auctions
     MODIFY COLUMN description TEXT NULL,
     MODIFY COLUMN status ENUM('draft', 'pending', 'active', 'ended', 'closed', 'cancelled') DEFAULT 'draft';
 
--- Rename current_highest_bid to current_price (if current_highest_bid exists)
--- Note: If current_price already exists, this will fail - you may need to drop current_price first
-ALTER TABLE auctions 
-    CHANGE COLUMN current_highest_bid current_price DECIMAL(10, 2) DEFAULT NULL;
 
 -- Add category string column (if it doesn't exist, this will fail - ignore if already exists)
 ALTER TABLE auctions 
