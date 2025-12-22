@@ -167,7 +167,7 @@ async function getAllAuctions(req, res) {
         // Map rows to include image URL
         const auctions = rows.map(auction => ({
             ...auction,
-            image_path: auction.image_path || (auction.id ? `http://localhost:3000/api/auctions/${auction.id}/image` : null)
+            image_path: auction.image_path || (auction.id ? `/api/auctions/${auction.id}/image` : null)
         }));
         
         // -------------------------------------------------
@@ -281,7 +281,7 @@ async function getAuctionById(req, res) {
         const auction = rows[0];
         // If image_path is null (meaning image is in DB), construct URL
         if (!auction.image_path) {
-            auction.image_path = `http://localhost:3000/api/auctions/${auction.id}/image`;
+            auction.image_path = `/api/auctions/${auction.id}/image`;
         }
         
         // Return the auction
