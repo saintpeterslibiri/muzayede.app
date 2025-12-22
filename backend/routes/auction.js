@@ -60,7 +60,10 @@ async function getAllAuctions(req, res) {
                 a.category,
                 a.image_path,
                 a.starting_price,
-                COALESCE(a.current_price, a.current_highest_bid) as current_price,
+                COALESCE(
+                    (SELECT MAX(bid_amount) FROM bids WHERE auction_id = a.id),
+                    a.starting_price
+                ) as current_price,
                 a.start_time,
                 a.end_time,
                 a.status,
