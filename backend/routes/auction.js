@@ -347,8 +347,11 @@ async function createAuction(req, res) {
         let imageMimeType = null;
         
         if (req.file) {
+            console.log(`Image uploaded: ${req.file.originalname}, size: ${req.file.size}, mimetype: ${req.file.mimetype}`);
             imageData = req.file.buffer;
             imageMimeType = req.file.mimetype;
+        } else {
+            console.log('No image file received in request');
         }
         
         // -------------------------------------------------
