@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $token = $response['data']['data']['token'];
             $userData = $response['data']['data']['user'] ?? null;
             saveTokenToSession($token, $userData);
+            session_write_close();
             header('Location: index.php');
             exit;
         } else {
