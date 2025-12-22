@@ -25,6 +25,8 @@ require('dotenv').config();
 const auctionScheduler = require('./services/auctionScheduler');
 
 
+const fs = require('fs');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -33,14 +35,32 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from frontend/uploads
 app.use('/uploads', express.static(path.join(__dirname, '../frontend/uploads')));
 
+// Configure multer for auction images (Memory Storage for DB)
+const uploadAuction = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: function (req, file, cb) {
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images are allowed!'));
+        }
+    }
+});
+
 // Auth & User Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticate, userRoutes);
 
 // Auction Routes
 app.get('/api/auctions', auctionRoutes.getAllAuctions);
-app.post('/api/auctions', authenticate, auctionRoutes.createAuction);
+app.post('/api/auctions', authenticate, uploadAuction.single('image'), auctionRoutes.createAuction);
 app.get('/api/auctions/:id', auctionRoutes.getAuctionById);
+app.get('/api/auctions/:id/image', auctionRoutes.getAuctionImage);
+app.put('/api/auctions/:id', authenticate, auctionRoutes.updateAuction);
 app.put('/api/auctions/:id', authenticate, auctionRoutes.updateAuction);
 app.delete('/api/auctions/:id', authenticate, auctionRoutes.deleteAuction);
 

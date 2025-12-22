@@ -53,12 +53,12 @@ async function getBidsByAuction(req, res) {
         // Get all bids for this auction
         // -------------------------------------------------
         // Join with users table to get bidder information
-        // Order by created_at DESC to show newest bids first
+        // Order by bid_amount DESC to show highest bids first (correct order even if timestamps match)
         
         const sql = `
             SELECT 
                 b.id,
-                b.amount,
+                b.bid_amount as amount,
                 b.is_auto_bid,
                 b.created_at,
                 u.id AS user_id,
@@ -67,7 +67,7 @@ async function getBidsByAuction(req, res) {
             FROM bids b
             JOIN users u ON b.user_id = u.id
             WHERE b.auction_id = ?
-            ORDER BY b.created_at DESC
+            ORDER BY b.bid_amount DESC
         `;
         
         const [bids] = await db.query(sql, [auctionId]);
@@ -180,16 +180,21 @@ async function placeBid(req, res) {
             response.sendError(res, `Bid must be higher than current price ($${currentPrice})`, 400);
             return;
         }
+
+        // Check if there is an auto-bid from another user that is higher than this bid
+        // If so, we should reject this bid or immediately outbid it?
+        // Standard behavior: Accept the bid, then let auto-bid outbid it immediately.
+        // BUT, if the user has an auto-bid themselves, we should check that too.
         
         // -------------------------------------------------
         // Get previous highest bidder (for outbid notification)
         // -------------------------------------------------
         
         const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
+            SELECT user_id, bid_amount as amount 
             FROM bids 
             WHERE auction_id = ? 
-            ORDER BY amount DESC 
+            ORDER BY bid_amount DESC 
             LIMIT 1
         `, [auctionId]);
         
@@ -200,7 +205,7 @@ async function placeBid(req, res) {
         // -------------------------------------------------
         
         const insertSql = `
-            INSERT INTO bids (auction_id, user_id, amount, is_auto_bid)
+            INSERT INTO bids (auction_id, user_id, bid_amount, is_auto_bid)
             VALUES (?, ?, ?, FALSE)
         `;
         
@@ -210,10 +215,22 @@ async function placeBid(req, res) {
         // Update auction's current price
         // -------------------------------------------------
         
-        await db.query(
-            'UPDATE auctions SET current_price = ? WHERE id = ?',
-            [bidAmount, auctionId]
-        );
+        // Try updating current_price, if it fails (column doesn't exist), try current_highest_bid
+        try {
+            await db.query(
+                'UPDATE auctions SET current_price = ? WHERE id = ?',
+                [bidAmount, auctionId]
+            );
+        } catch (err) {
+            if (err.code === 'ER_BAD_FIELD_ERROR') {
+                 await db.query(
+                    'UPDATE auctions SET current_highest_bid = ? WHERE id = ?',
+                    [bidAmount, auctionId]
+                );
+            } else {
+                throw err;
+            }
+        }
         
         // -------------------------------------------------
         // 📧 SEND EMAIL NOTIFICATIONS (async, don't await)
@@ -233,6 +250,13 @@ async function placeBid(req, res) {
         // Process auto-bids from other users
         // -------------------------------------------------
         // Check if any other user has auto-bid set higher than this bid
+        
+        // We need to check if the current user has an auto-bid that is lower than the new bid
+        // If so, we should disable it or update it? 
+        // Usually, manual bid overrides auto-bid if manual is higher.
+        
+        // Also check if there is a higher auto-bid from another user
+        // If so, that auto-bid should immediately trigger and outbid this new bid
         
         await processAutoBids(auctionId, userId, bidAmount);
         
@@ -342,10 +366,10 @@ async function setAutoBid(req, res) {
         // -------------------------------------------------
         
         const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
+            SELECT user_id, bid_amount as amount 
             FROM bids 
             WHERE auction_id = ? 
-            ORDER BY amount DESC 
+            ORDER BY bid_amount DESC 
             LIMIT 1
         `, [auctionId]);
         
@@ -371,39 +395,53 @@ async function setAutoBid(req, res) {
         // When setting auto-bid, place an initial bid to take the lead
         
         const bidIncrement = 1.00; // $1 increment, can be made configurable
-        const initialBid = currentPrice + bidIncrement;
+        let initialBid = currentPrice + bidIncrement;
         
-        // Only place bid if it's within max_amount
-        if (initialBid <= maxAmount) {
-            // Insert auto-bid
-            await db.query(
-                `INSERT INTO bids (auction_id, user_id, amount, is_auto_bid) VALUES (?, ?, ?, TRUE)`,
-                [auctionId, userId, initialBid]
-            );
-            
-            // Update auction price
-            await db.query(
-                'UPDATE auctions SET current_price = ? WHERE id = ?',
-                [initialBid, auctionId]
-            );
-            
-            // -------------------------------------------------
-            // 📧 SEND EMAIL NOTIFICATIONS
-            // -------------------------------------------------
-            
-            // Notify seller about new bid
-            mailService.notifySellerNewBid(auctionId, initialBid, userId)
-                .catch(err => console.error('Failed to send seller notification:', err));
-            
-            // Notify previous highest bidder
-            if (previousHighestBidder && previousHighestBidder.user_id !== userId) {
-                mailService.notifyOutbid(auctionId, previousHighestBidder.user_id, initialBid)
-                    .catch(err => console.error('Failed to send outbid notification:', err));
-            }
-            
-            // Process other auto-bids (may trigger bidding war)
-            await processAutoBids(auctionId, userId, initialBid);
+        // If current highest bid is from another user, we need to beat it
+        // If current highest bid is already from this user, we don't need to increase unless outbid
+        if (previousHighestBidder && previousHighestBidder.user_id === userId) {
+             // User is already winning, no need to place new bid immediately
+             // Just updating max_amount is enough
+             initialBid = currentPrice; 
+        } else {
+             // User is not winning, place bid to take lead
+             if (initialBid <= maxAmount) {
+                // Insert auto-bid
+                await db.query(
+                    `INSERT INTO bids (auction_id, user_id, bid_amount, is_auto_bid) VALUES (?, ?, ?, TRUE)`,
+                    [auctionId, userId, initialBid]
+                );
+                
+                // Update auction price
+            await db.query(`
+                UPDATE auctions
+                SET current_price = (
+                    SELECT MAX(bid_amount)
+                    FROM bids
+                    WHERE auction_id = ?
+                )
+                WHERE id = ?
+            `, [auctionId, auctionId]);
+                
+                // -------------------------------------------------
+                // 📧 SEND EMAIL NOTIFICATIONS
+                // -------------------------------------------------
+                
+                // Notify seller about new bid
+                mailService.notifySellerNewBid(auctionId, initialBid, userId)
+                    .catch(err => console.error('Failed to send seller notification:', err));
+                
+                // Notify previous highest bidder
+                if (previousHighestBidder && previousHighestBidder.user_id !== userId) {
+                    mailService.notifyOutbid(auctionId, previousHighestBidder.user_id, initialBid)
+                        .catch(err => console.error('Failed to send outbid notification:', err));
+                }
+             }
         }
+        
+        // Process other auto-bids (may trigger bidding war)
+        // We pass initialBid (or currentPrice if no new bid) as the amount to beat
+        await processAutoBids(auctionId, userId, (initialBid > currentPrice ? initialBid : currentPrice));
         
         // Get updated info
         const [updatedAuction] = await db.query(
@@ -441,102 +479,58 @@ async function setAutoBid(req, res) {
 
 async function processAutoBids(auctionId, excludeUserId, currentBidAmount) {
     try {
-        // Bid increment amount
-        const bidIncrement = 1.00;
-        
-        // -------------------------------------------------
-        // Find active auto-bids that can counter
-        // -------------------------------------------------
-        // Must be:
-        //   - For this auction
-        //   - Not from the user who just bid
-        //   - Active
-        //   - max_amount > current bid
-        
-        const sql = `
-            SELECT * FROM auto_bids
+        const [autoBids] = await db.query(`
+            SELECT *
+            FROM auto_bids
             WHERE auction_id = ?
-              AND user_id != ?
               AND is_active = TRUE
+              AND user_id != ?
               AND max_amount > ?
             ORDER BY max_amount DESC
-        `;
-        
-        const [autoBids] = await db.query(sql, [auctionId, excludeUserId, currentBidAmount]);
-        
-        // If no auto-bids can counter, we're done
-        if (autoBids.length === 0) {
-            return;
-        }
-        
-        // Get the highest auto-bid
-        const highestAutoBid = autoBids[0];
-        
-        // Calculate new bid amount
-        let newBidAmount = parseFloat(currentBidAmount) + bidIncrement;
-        
-        // Cap at max_amount
-        if (newBidAmount > parseFloat(highestAutoBid.max_amount)) {
-            newBidAmount = parseFloat(highestAutoBid.max_amount);
-        }
-        
-        // -------------------------------------------------
-        // Place the auto-bid
-        // -------------------------------------------------
-        
+            LIMIT 1
+        `, [auctionId, excludeUserId, currentBidAmount]);
+
+        if (autoBids.length === 0) return;
+
+        const autoBid = autoBids[0];
+
+        // 🔥 TEK HAMLE
+        const bidAmount = autoBid.max_amount;
+
         await db.query(
-            `INSERT INTO bids (auction_id, user_id, amount, is_auto_bid) VALUES (?, ?, ?, TRUE)`,
-            [auctionId, highestAutoBid.user_id, newBidAmount]
+            `INSERT INTO bids (auction_id, user_id, bid_amount, is_auto_bid)
+             VALUES (?, ?, ?, TRUE)`,
+            [auctionId, autoBid.user_id, bidAmount]
         );
-        
-        // Update auction price
-        await db.query(
-            'UPDATE auctions SET current_price = ? WHERE id = ?',
-            [newBidAmount, auctionId]
-        );
-        
-        console.log(`Auto-bid placed: User ${highestAutoBid.user_id} bid $${newBidAmount} on auction ${auctionId}`);
-        
-        // -------------------------------------------------
-        // 📧 SEND OUTBID NOTIFICATION
-        // -------------------------------------------------
-        // The user who was just outbid by auto-bid should be notified
-        
-        mailService.notifyOutbid(auctionId, excludeUserId, newBidAmount)
-            .catch(err => console.error('Failed to send auto-bid outbid notification:', err));
-        
-        // Also notify seller about the new auto-bid
-        mailService.notifySellerNewBid(auctionId, newBidAmount, highestAutoBid.user_id)
-            .catch(err => console.error('Failed to send seller auto-bid notification:', err));
-        
-        // -------------------------------------------------
-        // Check if original bidder has auto-bid too
-        // -------------------------------------------------
-        // This could trigger a "bidding war" between auto-bidders
-        // Recursively process until no more auto-bids can counter
-        
-        // To prevent infinite loops, we check if there are other auto-bids
-        // that can counter this new bid
-        const [remainingAutoBids] = await db.query(
-            `SELECT COUNT(*) as count FROM auto_bids
-             WHERE auction_id = ?
-               AND user_id != ?
-               AND is_active = TRUE
-               AND max_amount > ?`,
-            [auctionId, highestAutoBid.user_id, newBidAmount]
-        );
-        
-        if (remainingAutoBids[0].count > 0) {
-            // Recursively process (with a small delay to prevent stack overflow)
-            // In production, you might want to use a queue system
-            await processAutoBids(auctionId, highestAutoBid.user_id, newBidAmount);
+
+        try {
+            await db.query(
+                `UPDATE auctions SET current_price = ? WHERE id = ?`,
+                [bidAmount, auctionId]
+            );
+        } catch (err) {
+             if (err.code === 'ER_BAD_FIELD_ERROR') {
+                 await db.query(
+                    'UPDATE auctions SET current_highest_bid = ? WHERE id = ?',
+                    [bidAmount, auctionId]
+                );
+            } else {
+                console.error('Error updating auction price in auto-bid:', err);
+            }
         }
-        
-    } catch (error) {
-        console.error('Error in processAutoBids:', error);
-        // Don't throw - auto-bid failure shouldn't fail the main bid
+
+        // 📧 Bildirimler
+        mailService.notifyOutbid(auctionId, excludeUserId, bidAmount)
+            .catch(console.error);
+
+        mailService.notifySellerNewBid(auctionId, bidAmount, autoBid.user_id)
+            .catch(console.error);
+
+    } catch (err) {
+        console.error('Auto-bid error:', err);
     }
 }
+
 
 
 // -----------------------------------------------------

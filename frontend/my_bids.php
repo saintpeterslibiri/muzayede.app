@@ -50,12 +50,13 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $current = $bid['current_price'] ?? 0;
                                 $end     = $bid['end_time'] ?? '';
                                 $bidStatus = $bid['bid_status'] ?? '';
+                                $imagePath = $bid['image_path'] ?? 'assets/img/placeholder.png';
                             ?>
                             <tr>
                                 <td>
                                     <div class="table-item">
                                         <img
-                                            src="assets/img/placeholder.png"
+                                            src="<?php echo htmlspecialchars($imagePath); ?>"
                                             alt="Item"
                                             class="table-thumb"
                                         >
@@ -84,9 +85,15 @@ if (isset($response['success']) && $response['success'] === true) {
                                 </td>
 
                                 <td>
-                                    <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">
-                                        View Item
-                                    </a>
+                                    <?php if ($bidStatus === 'won'): ?>
+                                        <a href="order_complete.php?auction_id=<?php echo $id; ?>&amount=<?php echo urlencode($current); ?>" class="btn-small btn-primary">
+                                            Complete Order
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="auction_detail.php?id=<?php echo $id; ?>" class="btn-small">
+                                            View Item
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

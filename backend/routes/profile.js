@@ -274,7 +274,13 @@ async function getMyAuctions(req, res) {
         // Execute query
         // -------------------------------------------------
         
-        const [auctions] = await db.query(sql, params);
+        const [rows] = await db.query(sql, params);
+
+        // Map rows to include image URL
+        const auctions = rows.map(auction => ({
+            ...auction,
+            image_path: auction.image_path || (auction.id ? `http://localhost:3000/api/auctions/${auction.id}/image` : null)
+        }));
         
         // Get total count
         let countSql = `SELECT COUNT(*) as total FROM auctions WHERE seller_id = ?`;
@@ -364,11 +370,17 @@ async function getMyBids(req, res) {
             // Determine if user is currently leading
             const isLeading = parseFloat(record.my_highest_bid) >= parseFloat(record.current_price);
             
+            // Handle image path
+            let imagePath = record.image_path;
+            if (!imagePath) {
+                imagePath = `http://localhost:3000/api/auctions/${record.auction_id}/image`;
+            }
+
             // Add status info to record
             const bidInfo = {
                 auction_id: record.auction_id,
                 title: record.title,
-                image_path: record.image_path,
+                image_path: imagePath,
                 current_price: record.current_price,
                 my_highest_bid: record.my_highest_bid,
                 end_time: record.end_time,

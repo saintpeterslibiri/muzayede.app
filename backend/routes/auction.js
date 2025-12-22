@@ -51,6 +51,7 @@ async function getAllAuctions(req, res) {
         
         // Base SELECT query
         // We join with users table to get seller information
+        // COALESCE(a.current_price, a.current_highest_bid) handles both column names
         let sql = `
             SELECT 
                 a.id,
@@ -59,7 +60,7 @@ async function getAllAuctions(req, res) {
                 a.category,
                 a.image_path,
                 a.starting_price,
-                a.current_price,
+                COALESCE(a.current_price, a.current_highest_bid) as current_price,
                 a.start_time,
                 a.end_time,
                 a.status,
@@ -159,6 +160,12 @@ async function getAllAuctions(req, res) {
         // db.query() returns array: [rows, fields]
         // We only need rows, so we destructure with [rows]
         const [rows] = await db.query(sql, params);
+
+        // Map rows to include image URL
+        const auctions = rows.map(auction => ({
+            ...auction,
+            image_path: auction.image_path || (auction.id ? `http://localhost:3000/api/auctions/${auction.id}/image` : null)
+        }));
         
         // -------------------------------------------------
         // Get total count for pagination info
@@ -200,7 +207,7 @@ async function getAllAuctions(req, res) {
         // -------------------------------------------------
         
         response.sendSuccess(res, {
-            auctions: rows,
+            auctions: auctions,
             pagination: {
                 currentPage: pageNum,
                 totalPages: totalPages,
@@ -237,9 +244,20 @@ async function getAuctionById(req, res) {
         }
         
         // Query to get auction with seller info
+        // We also check for the highest auto-bid to display the true "current highest bid"
+        // If there is an active auto-bid higher than current_price, that should be considered?
+        // Actually, current_price in auctions table SHOULD reflect the current winning price.
+        // But if the user wants to see the max_amount of the winning auto-bid, that's private info usually.
+        // However, if the request implies that current_price is not updating correctly, 
+        // we can fetch the max bid from bids table to be sure.
+        
         const sql = `
             SELECT 
                 a.*,
+                COALESCE(
+                    (SELECT MAX(bid_amount) FROM bids WHERE auction_id = a.id),
+                    a.starting_price
+                ) as current_price,
                 u.username AS seller_username,
                 u.full_name AS seller_name,
                 u.avatar_path AS seller_avatar,
@@ -256,13 +274,47 @@ async function getAuctionById(req, res) {
             response.notFound(res, 'Auction not found');
             return;
         }
+
+        const auction = rows[0];
+        // If image_path is null (meaning image is in DB), construct URL
+        if (!auction.image_path) {
+            auction.image_path = `http://localhost:3000/api/auctions/${auction.id}/image`;
+        }
         
         // Return the auction
-        response.sendSuccess(res, { auction: rows[0] }, 'Auction retrieved successfully');
+        response.sendSuccess(res, { auction: auction }, 'Auction retrieved successfully');
         
     } catch (error) {
         console.error('Error in getAuctionById:', error);
         response.serverError(res, 'Failed to retrieve auction');
+    }
+}
+
+// -----------------------------------------------------
+// GET /api/auctions/:id/image - Get auction image
+// -----------------------------------------------------
+async function getAuctionImage(req, res) {
+    try {
+        const auctionId = req.params.id;
+        
+        const [rows] = await db.query(
+            'SELECT image_data, image_mime_type FROM auctions WHERE id = ?',
+            [auctionId]
+        );
+        
+        if (rows.length === 0 || !rows[0].image_data) {
+            // Return placeholder or 404
+            // For now, 404
+            return res.status(404).send('Image not found');
+        }
+        
+        const img = rows[0];
+        res.setHeader('Content-Type', img.image_mime_type || 'image/jpeg');
+        res.send(img.image_data);
+        
+    } catch (error) {
+        console.error('Error in getAuctionImage:', error);
+        res.status(500).send('Error retrieving image');
     }
 }
 
@@ -285,7 +337,16 @@ async function createAuction(req, res) {
     try {
         // Get data from request body
         // req.body was set in server.js by parseRequestBody()
-        const { title, description, category, starting_price, start_time, end_time, image_path } = req.body;
+        const { title, description, category, starting_price, start_time, end_time } = req.body;
+        
+        // Handle image upload
+        let imageData = null;
+        let imageMimeType = null;
+        
+        if (req.file) {
+            imageData = req.file.buffer;
+            imageMimeType = req.file.mimetype;
+        }
         
         // -------------------------------------------------
         // Authentication check
@@ -343,8 +404,8 @@ async function createAuction(req, res) {
         
         const insertSql = `
             INSERT INTO auctions 
-            (seller_id, title, description, category, image_path, starting_price, current_price, start_time, end_time, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (seller_id, title, description, category, image_data, image_mime_type, starting_price, current_price, start_time, end_time, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
         // current_price starts equal to starting_price
@@ -353,7 +414,8 @@ async function createAuction(req, res) {
             title,
             description || null,
             category,
-            image_path || null,
+            imageData,
+            imageMimeType,
             starting_price,
             starting_price, // current_price = starting_price initially
             start_time,
@@ -576,5 +638,6 @@ module.exports = {
     getAuctionById,
     createAuction,
     updateAuction,
-    deleteAuction
+    deleteAuction,
+    getAuctionImage
 };

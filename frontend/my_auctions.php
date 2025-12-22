@@ -57,12 +57,13 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $current = $item['current_price'] ?? $start;
                                 $end     = $item['end_time'] ?? '';
                                 $status  = $item['status'] ?? 'Active';
+                                $image   = (!empty($item['image_path'])) ? $item['image_path'] : 'assets/img/placeholder.png';
                             ?>
                             <tr>
                                 <td>
                                     <div class="table-item">
                                         <img
-                                            src="assets/img/placeholder.png"
+                                            src="<?php echo htmlspecialchars($image); ?>"
                                             alt="Item"
                                             class="table-thumb"
                                         >

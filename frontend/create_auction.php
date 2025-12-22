@@ -20,7 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'end_time'       => $_POST['end_time'] ?? ''
     ];
 
-    $response = api_post("/auctions", $data);
+    $files = [];
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $files['image'] = $_FILES['image'];
+        $response = api_post_multipart("/auctions", $data, $files);
+    } else {
+        $response = api_post("/auctions", $data);
+    }
 
     if (isset($response['success']) && $response['success'] === true) {
         $successMsg = "Auction created successfully!";
@@ -46,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <section class="form-section">
-            <form method="POST" class="auth-form">
+            <form method="POST" class="auth-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="title">Item Title</label>
                     <input type="text" id="title" name="title" required placeholder="e.g. Vintage Watch">

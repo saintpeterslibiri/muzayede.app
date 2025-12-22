@@ -51,3 +51,4 @@ ALTER TABLE auctions
     ADD COLUMN winner_id INT NULL AFTER status,
     ADD FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL,
     ADD INDEX idx_winner_id (winner_id);
+

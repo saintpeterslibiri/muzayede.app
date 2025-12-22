@@ -66,19 +66,16 @@ async function processAuctionEnd(auction) {
         const winner = hasWinner ? winningBid[0] : null;
         
         // -------------------------------------------------
-        // Update auction status
-        // -------------------------------------------------
-        
-        await db.query(
-            'UPDATE auctions SET status = ? WHERE id = ?',
-            ['ended', auction.id]
-        );
-        
-        // -------------------------------------------------
-        // Mark winning bid
+        // Update auction status and winner
         // -------------------------------------------------
         
         if (hasWinner) {
+            // Update auction status AND winner_id
+            await db.query(
+                'UPDATE auctions SET status = ?, winner_id = ? WHERE id = ?',
+                ['ended', winner.winner_id, auction.id]
+            );
+
             // Reset all bids for this auction
             await db.query(
                 'UPDATE bids SET is_winning_bid = FALSE WHERE auction_id = ?',
@@ -93,6 +90,11 @@ async function processAuctionEnd(auction) {
             
             console.log(`🏆 Winner: ${winner.full_name} with bid $${winner.amount}`);
         } else {
+            // Just update status
+            await db.query(
+                'UPDATE auctions SET status = ? WHERE id = ?',
+                ['ended', auction.id]
+            );
             console.log(`❌ No bids received for auction ${auction.id}`);
         }
         
