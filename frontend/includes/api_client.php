@@ -18,7 +18,7 @@ function api_get($endpoint) {
     $headers = ["Content-Type: application/json"];
     
     // Add token if exists in session
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     if (isset($_SESSION['auth_token'])) {
@@ -58,7 +58,7 @@ function api_post($endpoint, $payload = []) {
     $headers = ["Content-Type: application/json"];
     
     // Add token if exists in session
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     if (isset($_SESSION['auth_token'])) {
@@ -100,7 +100,7 @@ function api_post_multipart($endpoint, $fields = [], $files = []) {
     $headers = [];
     
     // Add token if exists in session
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     if (isset($_SESSION['auth_token'])) {
@@ -153,7 +153,7 @@ function api_put($endpoint, $payload = []) {
     $headers = ["Content-Type: application/json"];
     
     // Add token if exists in session
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     if (isset($_SESSION['auth_token'])) {
@@ -194,7 +194,7 @@ function api_delete($endpoint) {
     $headers = ["Content-Type: application/json"];
     
     // Add token if exists in session
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     if (isset($_SESSION['auth_token'])) {

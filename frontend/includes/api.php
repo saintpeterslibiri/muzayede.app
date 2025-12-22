@@ -121,7 +121,7 @@ function getTokenFromSession() {
  * Kullanıcı giriş yapmış mı kontrol et
  */
 function isLoggedIn() {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     return isset($_SESSION['auth_token']) && isset($_SESSION['user_id']);
@@ -131,7 +131,7 @@ function isLoggedIn() {
  * Kullanıcı admin mi kontrol et
  */
 function isAdmin() {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
