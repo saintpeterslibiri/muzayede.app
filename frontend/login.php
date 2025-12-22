@@ -1,5 +1,7 @@
 <?php 
-session_start();
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+    session_start();
+}
 require_once 'includes/api.php';
 
 // Eğer zaten giriş yapılmışsa ana sayfaya yönlendir
