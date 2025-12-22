@@ -89,7 +89,7 @@ function decodeToken($token) {
  * Session'a token kaydet
  */
 function saveTokenToSession($token, $userData = null) {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     $_SESSION['auth_token'] = $token;
@@ -112,7 +112,7 @@ function saveTokenToSession($token, $userData = null) {
  * Session'dan token'ı al
  */
 function getTokenFromSession() {
-    if (session_status() === PHP_SESSION_NONE) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
         session_start();
     }
     return isset($_SESSION['auth_token']) ? $_SESSION['auth_token'] : null;
