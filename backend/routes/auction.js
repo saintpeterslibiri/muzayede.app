@@ -96,6 +96,10 @@ async function getAllAuctions(req, res) {
         if (status && status !== '') {
             sql += ` AND a.status = ?`;
             params.push(status);
+            // If status is 'active', also filter out expired auctions
+            if (status === 'active') {
+                sql += ` AND a.start_time <= NOW() AND a.end_time > NOW()`;
+            }
         } else {
             // By default, show only active auctions that have started and haven't ended yet
             sql += ` AND a.status = 'active' AND a.start_time <= NOW() AND a.end_time > NOW()`;
@@ -192,6 +196,10 @@ async function getAllAuctions(req, res) {
         if (status && status !== '') {
             countSql += ` AND a.status = ?`;
             countParams.push(status);
+            // If status is 'active', also filter out expired auctions
+            if (status === 'active') {
+                countSql += ` AND a.start_time <= NOW() AND a.end_time > NOW()`;
+            }
         } else {
             countSql += ` AND a.status = 'active' AND a.start_time <= NOW() AND a.end_time > NOW()`;
         }
