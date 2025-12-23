@@ -97,8 +97,8 @@ async function getAllAuctions(req, res) {
             sql += ` AND a.status = ?`;
             params.push(status);
         } else {
-            // By default, show only active auctions that haven't ended yet
-            sql += ` AND a.status = 'active' AND a.end_time > NOW()`;
+            // By default, show only active auctions that have started and haven't ended yet
+            sql += ` AND a.status = 'active' AND a.start_time <= NOW() AND a.end_time > NOW()`;
         }
         
         // Search by title (if q parameter provided)
@@ -193,7 +193,7 @@ async function getAllAuctions(req, res) {
             countSql += ` AND a.status = ?`;
             countParams.push(status);
         } else {
-            countSql += ` AND a.status = 'active' AND a.end_time > NOW()`;
+            countSql += ` AND a.status = 'active' AND a.start_time <= NOW() AND a.end_time > NOW()`;
         }
         
         if (q && q !== '') {
