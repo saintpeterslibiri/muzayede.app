@@ -11,11 +11,6 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - db_data:/var/lib/mysql
-      - ./backend/data/init.sql:/docker-entrypoint-initdb.d/01_init.sql
-      - ./backend/data/20251812_2330.sql:/docker-entrypoint-initdb.d/03_20251812_2330.sql
-      - ./backend/data/migration.sql:/docker-entrypoint-initdb.d/02_migration.sql
-      - ./backend/data/migration_images_db.sql:/docker-entrypoint-initdb.d/04_migration_images_db.sql
-      - ./backend/data/migration_increase_decimal_20.sql:/docker-entrypoint-initdb.d/06_migration_increase_decimal_20.sql
     ports:
       - "3306:3306"
     networks:

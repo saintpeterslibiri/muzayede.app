@@ -243,7 +243,7 @@ async function getMyAuctions(req, res) {
             SELECT 
                 a.*,
                 (SELECT COUNT(*) FROM bids WHERE auction_id = a.id) AS bid_count,
-                (SELECT MAX(amount) FROM bids WHERE auction_id = a.id) AS highest_bid
+                (SELECT MAX(bid_amount) FROM bids WHERE auction_id = a.id) AS highest_bid
             FROM auctions a
             WHERE a.seller_id = ?
         `;
@@ -343,7 +343,7 @@ async function getMyBids(req, res) {
                 a.end_time,
                 a.status AS auction_status,
                 a.winner_id,
-                MAX(b.amount) AS my_highest_bid,
+                MAX(b.bid_amount) AS my_highest_bid,
                 MAX(b.created_at) AS last_bid_time
             FROM bids b
             JOIN auctions a ON b.auction_id = a.id

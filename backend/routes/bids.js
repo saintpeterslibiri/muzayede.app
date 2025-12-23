@@ -58,7 +58,7 @@ async function getBidsByAuction(req, res) {
         const sql = `
             SELECT 
                 b.id,
-                b.amount,
+                b.bid_amount as amount,
                 b.is_auto_bid,
                 b.created_at,
                 u.id AS user_id,
@@ -67,7 +67,7 @@ async function getBidsByAuction(req, res) {
             FROM bids b
             JOIN users u ON b.user_id = u.id
             WHERE b.auction_id = ?
-            ORDER BY b.amount DESC
+            ORDER BY b.bid_amount DESC
         `;
         
         const [bids] = await db.query(sql, [auctionId]);
@@ -191,10 +191,10 @@ async function placeBid(req, res) {
         // -------------------------------------------------
         
         const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
+            SELECT user_id, bid_amount as amount 
             FROM bids 
             WHERE auction_id = ? 
-            ORDER BY amount DESC 
+            ORDER BY bid_amount DESC 
             LIMIT 1
         `, [auctionId]);
         
@@ -366,10 +366,10 @@ async function setAutoBid(req, res) {
         // -------------------------------------------------
         
         const [previousHighestBid] = await db.query(`
-            SELECT user_id, amount 
+            SELECT user_id, bid_amount as amount 
             FROM bids 
             WHERE auction_id = ? 
-            ORDER BY amount DESC 
+            ORDER BY bid_amount DESC 
             LIMIT 1
         `, [auctionId]);
         

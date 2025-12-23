@@ -172,7 +172,7 @@ async function getStats(req, res) {
         
         // Highest bid ever
         const [highestBid] = await db.query(
-            'SELECT MAX(amount) as amount FROM bids'
+            'SELECT MAX(bid_amount) as amount FROM bids'
         );
         
         // -------------------------------------------------
@@ -190,7 +190,7 @@ async function getStats(req, res) {
         
         // Recent bids (last 5)
         const [recentBids] = await db.query(
-            `SELECT b.amount, b.created_at, u.username, a.title as auction_title
+            `SELECT b.bid_amount as amount, b.created_at, u.username, a.title as auction_title
              FROM bids b
              JOIN users u ON b.user_id = u.id
              JOIN auctions a ON b.auction_id = a.id

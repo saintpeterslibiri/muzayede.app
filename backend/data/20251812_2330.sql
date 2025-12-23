@@ -35,8 +35,8 @@ WHERE a.category IS NULL AND a.category_id IS NOT NULL;
 -- Rename 'bid_amount' to 'amount' to match code
 -- Note: If 'amount' column already exists, comment out or skip this line
 
-ALTER TABLE bids 
-    CHANGE COLUMN bid_amount amount DECIMAL(10, 2) NOT NULL;
+    ALTER TABLE bids 
+        CHANGE COLUMN bid_amount amount DECIMAL(10, 2) NOT NULL;
 
 -- ============================================
 -- AUCTIONS TABLE - Add winner_id column
