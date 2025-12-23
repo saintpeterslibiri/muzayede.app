@@ -182,7 +182,7 @@ include 'includes/navbar.php';
                             $avatarUrl = $user['avatar_path'];
                             // Eğer path uploads/ ile başlıyorsa, backend URL'ini kullan
                             if (strpos($avatarUrl, 'uploads/') === 0) {
-                                $avatarUrl = 'http://localhost:3000/' . $avatarUrl;
+                                $avatarUrl = PUBLIC_API_URL . '/' . $avatarUrl;
                             }
                             ?>
                             <img src="<?php echo htmlspecialchars($avatarUrl); ?>" class="avatar-img" alt="Avatar">

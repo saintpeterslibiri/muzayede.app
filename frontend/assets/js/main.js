@@ -14,7 +14,7 @@
 
 // Base URL for all API calls
 // Change this if your backend runs on different port/host
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = (window.CONFIG && window.CONFIG.API_BASE_URL) || 'http://localhost:3000/api';
 
 
 // -----------------------------------------------------

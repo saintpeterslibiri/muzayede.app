@@ -86,6 +86,9 @@ $prefSort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'default';
                         $price   = $item['current_price'] ?? $item['starting_price'] ?? 0;
                         $endTime = $item['end_time'] ?? '';
                         $image   = (!empty($item['image_path'])) ? $item['image_path'] : 'assets/img/placeholder.png';
+                        if (strpos($image, '/api/') === 0) {
+                            $image = PUBLIC_API_URL . $image;
+                        }
 
                         $cat =
                             ($item['category'] ?? null) ??

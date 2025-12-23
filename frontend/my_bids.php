@@ -51,6 +51,9 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $end     = $bid['end_time'] ?? '';
                                 $bidStatus = $bid['bid_status'] ?? '';
                                 $imagePath = $bid['image_path'] ?? 'assets/img/placeholder.png';
+                                if (strpos($imagePath, '/api/') === 0) {
+                                    $imagePath = PUBLIC_API_URL . $imagePath;
+                                }
                             ?>
                             <tr>
                                 <td>

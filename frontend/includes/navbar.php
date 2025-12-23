@@ -14,7 +14,7 @@ $avatar_url = null;
 if ($avatar_path) {
     // Eğer path uploads/ ile başlıyorsa, backend URL'ini kullan
     if (strpos($avatar_path, 'uploads/') === 0) {
-        $avatar_url = 'http://localhost:3000/' . $avatar_path;
+        $avatar_url = PUBLIC_API_URL . '/' . $avatar_path;
     } else {
         $avatar_url = $avatar_path;
     }

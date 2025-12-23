@@ -279,7 +279,7 @@ async function getMyAuctions(req, res) {
         // Map rows to include image URL
         const auctions = rows.map(auction => ({
             ...auction,
-            image_path: auction.image_path || (auction.id ? `http://localhost:3000/api/auctions/${auction.id}/image` : null)
+            image_path: auction.image_path || (auction.id ? `/api/auctions/${auction.id}/image` : null)
         }));
         
         // Get total count
@@ -373,7 +373,7 @@ async function getMyBids(req, res) {
             // Handle image path
             let imagePath = record.image_path;
             if (!imagePath) {
-                imagePath = `http://localhost:3000/api/auctions/${record.auction_id}/image`;
+                imagePath = `/api/auctions/${record.auction_id}/image`;
             }
 
             // Add status info to record

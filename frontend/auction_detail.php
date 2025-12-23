@@ -79,6 +79,9 @@ $starting    = $auction['starting_price'] ?? 0;
 $current     = $auction['current_price'] ?? $starting;
 $endTime     = $auction['end_time'] ?? '';
 $imgPath     = (!empty($auction['image_path'])) ? $auction['image_path'] : 'assets/img/placeholder.png';
+if (strpos($imgPath, '/api/') === 0) {
+    $imgPath = PUBLIC_API_URL . $imgPath;
+}
 $sellerUsername =
     $auction['username'] ??
     $auction['seller_username'] ??

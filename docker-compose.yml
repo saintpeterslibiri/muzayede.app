@@ -47,7 +47,8 @@ services:
       target: frontend
     container_name: muzayede_frontend
     environment:
-      API_BASE_URL: http://145.223.100.162:3000/api
+      API_BASE_URL: http://backend:3000/api
+      PUBLIC_API_URL: http://145.223.100.162:3000
     ports:
       - "8080:80"
     depends_on:

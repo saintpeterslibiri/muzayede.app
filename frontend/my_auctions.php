@@ -58,6 +58,9 @@ if (isset($response['success']) && $response['success'] === true) {
                                 $end     = $item['end_time'] ?? '';
                                 $status  = $item['status'] ?? 'Active';
                                 $image   = (!empty($item['image_path'])) ? $item['image_path'] : 'assets/img/placeholder.png';
+                                if (strpos($image, '/api/') === 0) {
+                                    $image = PUBLIC_API_URL . $image;
+                                }
                             ?>
                             <tr>
                                 <td>

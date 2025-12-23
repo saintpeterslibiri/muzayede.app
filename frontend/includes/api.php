@@ -5,7 +5,14 @@
  */
 
 $apiBase = getenv('API_BASE_URL') ?: 'http://localhost:3000/api';
-define('API_BASE_URL', $apiBase);
+if (!defined('API_BASE_URL')) {
+    define('API_BASE_URL', $apiBase);
+}
+
+if (!defined('PUBLIC_API_URL')) {
+    $publicApiUrl = getenv('PUBLIC_API_URL') ?: 'http://localhost:3000';
+    define('PUBLIC_API_URL', $publicApiUrl);
+}
 
 /**
  * API'ye istek gönder
