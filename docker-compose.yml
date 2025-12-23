@@ -10,6 +10,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       TZ: Europe/Istanbul
+    command: --default-time-zone='+03:00'
     volumes:
       - db_data:/var/lib/mysql
     ports:
@@ -46,6 +47,7 @@ services:
     environment:
       API_BASE_URL: http://backend:3000/api
       PUBLIC_API_URL: http://145.223.100.162:3000
+      TZ: Europe/Istanbul
     ports:
       - "8080:80"
     depends_on:
