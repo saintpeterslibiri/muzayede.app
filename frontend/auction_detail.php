@@ -2,6 +2,9 @@
 include 'includes/header.php';
 include 'includes/navbar.php';
 require_once 'includes/api_client.php';
+require_once 'includes/api.php';
+
+$isLoggedIn = isLoggedIn();
 
 
 // ---- ID kontrol ----
@@ -237,5 +240,101 @@ if (!empty($sellerId)) {
         </section>
     </div>
 </main>
+
+<?php if ($isLoggedIn) : ?>
+    <!-- Auto Bid Sidebar -->
+    <div id="autoBidSidebar" class="auto-bid-sidebar">
+        <div class="auto-bid-sidebar-header">
+            <h3>My Auto Bids</h3>
+            <button class="auto-bid-toggle" onclick="toggleAutoBidSidebar()">×</button>
+        </div>
+        <div class="auto-bid-sidebar-content" id="autoBidContent">
+            <div class="auto-bid-loading">Loading...</div>
+        </div>
+    </div>
+    <button class="auto-bid-sidebar-toggle-btn" onclick="toggleAutoBidSidebar()" id="autoBidToggleBtn">
+        <span>Auto Bids</span>
+    </button>
+
+    <script>
+    // Load auto bids on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAutoBids();
+        // Refresh every 30 seconds
+        setInterval(loadAutoBids, 30000);
+    });
+
+    async function loadAutoBids() {
+        const content = document.getElementById('autoBidContent');
+        if (!content) return;
+        
+        try {
+            const token = '<?php echo isset($_SESSION["auth_token"]) ? $_SESSION["auth_token"] : ""; ?>';
+            const response = await fetch(window.CONFIG.API_BASE_URL + '/my/auto-bids', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.data.auto_bids.length > 0) {
+                let html = '<div class="auto-bid-list">';
+                data.data.auto_bids.forEach(function(bid) {
+                    const imageUrl = bid.image_path && bid.image_path.startsWith('/api/') 
+                        ? '<?php echo getenv("PUBLIC_API_URL") ?: "http://localhost:3000"; ?>' + bid.image_path
+                        : (bid.image_path || 'assets/img/placeholder.png');
+                    const timeLeft = formatTimeRemaining(bid.end_time);
+                    
+                    html += `
+                        <div class="auto-bid-item">
+                            <a href="auction_detail.php?id=${bid.auction_id}">
+                                <img src="${imageUrl}" alt="${bid.title}" class="auto-bid-image">
+                                <div class="auto-bid-info">
+                                    <div class="auto-bid-title">${bid.title}</div>
+                                    <div class="auto-bid-price">Max: $${parseFloat(bid.max_amount).toFixed(2)}</div>
+                                    <div class="auto-bid-time">${timeLeft}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else {
+                content.innerHTML = '<div class="auto-bid-empty">No active auto bids</div>';
+            }
+        } catch (error) {
+            console.error('Error loading auto bids:', error);
+            content.innerHTML = '<div class="auto-bid-error">Error loading auto bids</div>';
+        }
+    }
+
+    function toggleAutoBidSidebar() {
+        const sidebar = document.getElementById('autoBidSidebar');
+        const btn = document.getElementById('autoBidToggleBtn');
+        if (sidebar && btn) {
+            sidebar.classList.toggle('open');
+            btn.classList.toggle('open');
+        }
+    }
+
+    function formatTimeRemaining(endDateString) {
+        const end = new Date(endDateString);
+        const now = new Date();
+        const diff = end - now;
+        
+        if (diff <= 0) return 'Ended';
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h ${minutes}m`;
+        return `${minutes}m`;
+    }
+    </script>
+<?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

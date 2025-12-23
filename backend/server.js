@@ -74,6 +74,7 @@ app.get('/api/profile', authenticate, profileRoutes.getProfile);
 app.put('/api/profile', authenticate, profileRoutes.updateProfile);
 app.get('/api/my/auctions', authenticate, profileRoutes.getMyAuctions);
 app.get('/api/my/bids', authenticate, profileRoutes.getMyBids);
+app.get('/api/my/auto-bids', authenticate, profileRoutes.getMyAutoBids);
 
 // Admin Routes
 app.get('/api/admin/stats', authenticate, isAdmin, adminRoutes.getStats);

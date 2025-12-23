@@ -437,6 +437,63 @@ async function getMyBids(req, res) {
 
 
 // -----------------------------------------------------
+// GET /api/my/auto-bids - Get user's active auto-bids
+// -----------------------------------------------------
+// Returns all active auto-bids for the current user
+// Used to display in sidebar or widget
+
+async function getMyAutoBids(req, res) {
+    try {
+        // TODO: Get actual user ID from auth
+        const userId = req.user?.id || 3; // Default to buyer1 for testing
+        
+        // -------------------------------------------------
+        // Get active auto-bids with auction details
+        // -------------------------------------------------
+        
+        const sql = `
+            SELECT 
+                ab.id AS auto_bid_id,
+                ab.max_amount,
+                ab.current_bid_amount,
+                ab.created_at AS auto_bid_created_at,
+                a.id AS auction_id,
+                a.title,
+                a.image_path,
+                a.current_price,
+                a.end_time,
+                a.status AS auction_status,
+                (SELECT MAX(bid_amount) FROM bids WHERE auction_id = a.id) AS highest_bid
+            FROM auto_bids ab
+            JOIN auctions a ON ab.auction_id = a.id
+            WHERE ab.user_id = ? 
+              AND ab.is_active = TRUE
+              AND a.status = 'active'
+              AND a.end_time > NOW()
+            ORDER BY a.end_time ASC
+        `;
+        
+        const [rows] = await db.query(sql, [userId]);
+        
+        // Map rows to include image URL
+        const autoBids = rows.map(item => ({
+            ...item,
+            image_path: item.image_path || (item.auction_id ? `/api/auctions/${item.auction_id}/image` : null)
+        }));
+        
+        response.sendSuccess(res, {
+            auto_bids: autoBids,
+            count: autoBids.length
+        }, 'Active auto-bids retrieved successfully');
+        
+    } catch (error) {
+        console.error('Error in getMyAutoBids:', error);
+        response.serverError(res, 'Failed to retrieve auto-bids');
+    }
+}
+
+
+// -----------------------------------------------------
 // Export all functions
 // -----------------------------------------------------
 
@@ -444,5 +501,6 @@ module.exports = {
     getProfile,
     updateProfile,
     getMyAuctions,
-    getMyBids
+    getMyBids,
+    getMyAutoBids
 };
