@@ -97,8 +97,8 @@ async function getAllAuctions(req, res) {
             sql += ` AND a.status = ?`;
             params.push(status);
         } else {
-            // By default, show only active auctions
-            sql += ` AND a.status = 'active'`;
+            // By default, show only active auctions that haven't ended yet
+            sql += ` AND a.status = 'active' AND a.end_time > NOW()`;
         }
         
         // Search by title (if q parameter provided)
