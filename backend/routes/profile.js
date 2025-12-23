@@ -349,7 +349,7 @@ async function getMyBids(req, res) {
             JOIN auctions a ON b.auction_id = a.id
             WHERE b.user_id = ?
             GROUP BY a.id
-            ORDER BY b.created_at DESC
+            ORDER BY MAX(b.created_at) DESC
         `;
         
         const [bidRecords] = await db.query(sql, [userId]);
