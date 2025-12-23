@@ -58,7 +58,7 @@ async function processAuctionEnd(auction) {
             FROM bids b
             JOIN users u ON b.user_id = u.id
             WHERE b.auction_id = ?
-            ORDER BY b.amount DESC
+            ORDER BY b.bid_amount DESC
             LIMIT 1
         `, [auction.id]);
         
@@ -88,7 +88,7 @@ async function processAuctionEnd(auction) {
                 [winner.id]
             );
             
-            console.log(`🏆 Winner: ${winner.full_name} with bid $${winner.amount}`);
+            console.log(`🏆 Winner: ${winner.full_name} with bid $${winner.bid_amount}`);
         } else {
             // Just update status
             await db.query(
@@ -116,7 +116,7 @@ async function processAuctionEnd(auction) {
         
         // 2. If there's a winner, notify them
         if (hasWinner) {
-            await mailService.notifyAuctionWon(auction.id, winner.winner_id, winner.amount);
+            await mailService.notifyAuctionWon(auction.id, winner.winner_id, winner.bid_amount);
         }
         
         console.log(`✅ Auction ${auction.id} processed successfully`);

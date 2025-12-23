@@ -16,16 +16,16 @@ async function fixWinners() {
         for (const auction of endedAuctions) {
             // Find the highest bid for this auction
             const [winningBid] = await db.query(`
-                SELECT user_id, amount 
+                SELECT user_id, bid_amount 
                 FROM bids 
                 WHERE auction_id = ? 
-                ORDER BY amount DESC 
+                ORDER BY bid_amount DESC 
                 LIMIT 1
             `, [auction.id]);
 
             if (winningBid.length > 0) {
                 const winnerId = winningBid[0].user_id;
-                const amount = winningBid[0].amount;
+                const bidAmount = winningBid[0].bid_amount;
 
                 // Update auction with winner_id
                 await db.query(`
@@ -41,7 +41,7 @@ async function fixWinners() {
                     WHERE auction_id = ?
                 `, [winnerId, auction.id]);
 
-                console.log(`Fixed auction "${auction.title}" (ID: ${auction.id}): Winner ID ${winnerId} with bid $${amount}`);
+                console.log(`Fixed auction "${auction.title}" (ID: ${auction.id}): Winner ID ${winnerId} with bid $${bidAmount}`);
             } else {
                 console.log(`Auction "${auction.title}" (ID: ${auction.id}) has no bids.`);
             }

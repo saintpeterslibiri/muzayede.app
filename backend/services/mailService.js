@@ -360,7 +360,7 @@ async function notifySellerAuctionEnded(auctionId) {
             FROM bids b
             JOIN users u ON b.user_id = u.id
             WHERE b.auction_id = ?
-            ORDER BY b.amount DESC
+            ORDER BY b.bid_amount DESC
             LIMIT 1
         `, [auctionId]);
         
@@ -395,7 +395,7 @@ async function notifySellerAuctionEnded(auctionId) {
                     ${hasWinner ? `
                     <div class="highlight">
                         <p><strong>🏆 Kazanan:</strong> ${winner.winner_name} (@${winner.winner_username})</p>
-                        <p><strong>💰 Kazanan Teklif:</strong> ${formatCurrency(winner.amount)}</p>
+                        <p><strong>💰 Kazanan Teklif:</strong> ${formatCurrency(winner.bid_amount)}</p>
                         <p><strong>📧 Email:</strong> ${winner.winner_email}</p>
                     </div>
                     <p>Kazanan ile iletişime geçerek ürün teslimatını ayarlayabilirsiniz.</p>
@@ -422,7 +422,7 @@ async function notifySellerAuctionEnded(auctionId) {
         await sendEmail(
             auction.seller_email,
             hasWinner 
-                ? `🎊 "${auction.title}" Satıldı! - ${formatCurrency(winner.amount)}`
+                ? `🎊 "${auction.title}" Satıldı! - ${formatCurrency(winner.bid_amount)}`
                 : `⏰ "${auction.title}" Açık Artırması Sona Erdi`,
             html
         );

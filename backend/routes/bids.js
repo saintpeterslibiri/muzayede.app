@@ -212,25 +212,13 @@ async function placeBid(req, res) {
         const [result] = await db.query(insertSql, [auctionId, userId, bidAmount]);
         
         // -------------------------------------------------
-        // Update auction's current price
+        // Update auction's current highest bid
         // -------------------------------------------------
         
-        // Try updating current_price, if it fails (column doesn't exist), try current_highest_bid
-        try {
-            await db.query(
-                'UPDATE auctions SET current_price = ? WHERE id = ?',
-                [bidAmount, auctionId]
-            );
-        } catch (err) {
-            if (err.code === 'ER_BAD_FIELD_ERROR') {
-                 await db.query(
-                    'UPDATE auctions SET current_highest_bid = ? WHERE id = ?',
-                    [bidAmount, auctionId]
-                );
-            } else {
-                throw err;
-            }
-        }
+        await db.query(
+            'UPDATE auctions SET current_highest_bid = ? WHERE id = ?',
+            [bidAmount, auctionId]
+        );
         
         // -------------------------------------------------
         // 📧 SEND EMAIL NOTIFICATIONS (async, don't await)
@@ -265,7 +253,7 @@ async function placeBid(req, res) {
         // -------------------------------------------------
         
         const [updatedAuction] = await db.query(
-            'SELECT current_price FROM auctions WHERE id = ?',
+            'SELECT current_highest_bid as current_price FROM auctions WHERE id = ?',
             [auctionId]
         );
         
@@ -415,7 +403,7 @@ async function setAutoBid(req, res) {
                 // Update auction price
             await db.query(`
                 UPDATE auctions
-                SET current_price = (
+                SET current_highest_bid = (
                     SELECT MAX(bid_amount)
                     FROM bids
                     WHERE auction_id = ?
@@ -445,7 +433,7 @@ async function setAutoBid(req, res) {
         
         // Get updated info
         const [updatedAuction] = await db.query(
-            'SELECT current_price FROM auctions WHERE id = ?',
+            'SELECT current_highest_bid as current_price FROM auctions WHERE id = ?',
             [auctionId]
         );
         
@@ -505,18 +493,11 @@ async function processAutoBids(auctionId, excludeUserId, currentBidAmount) {
 
         try {
             await db.query(
-                `UPDATE auctions SET current_price = ? WHERE id = ?`,
+                `UPDATE auctions SET current_highest_bid = ? WHERE id = ?`,
                 [bidAmount, auctionId]
             );
         } catch (err) {
-             if (err.code === 'ER_BAD_FIELD_ERROR') {
-                 await db.query(
-                    'UPDATE auctions SET current_highest_bid = ? WHERE id = ?',
-                    [bidAmount, auctionId]
-                );
-            } else {
-                console.error('Error updating auction price in auto-bid:', err);
-            }
+            console.error('Error updating auction price in auto-bid:', err);
         }
 
         // 📧 Bildirimler
