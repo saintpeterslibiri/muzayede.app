@@ -148,6 +148,9 @@ if ($profileUsername !== '') $initial = strtoupper(mb_substr($profileUsername, 0
                             $price   = $item['current_price'] ?? $item['starting_price'] ?? 0;
                             $endTime = $item['end_time'] ?? '';
                             $image   = (!empty($item['image_path'])) ? $item['image_path'] : 'assets/img/placeholder.png';
+                            if (strpos($image, '/api/') === 0) {
+                                $image = PUBLIC_API_URL . $image;
+                            }
                         ?>
                         <div class="auction-card">
                             <div class="card-image">
