@@ -292,6 +292,30 @@ async function getAuctionById(req, res) {
             auction.image_path = `/api/auctions/${auction.id}/image`;
         }
         
+        // -------------------------------------------------
+        // Get user's auto-bid if authenticated
+        // -------------------------------------------------
+        let userAutoBid = null;
+        if (req.user && req.user.id) {
+            const userId = req.user.id;
+            const [autoBidRows] = await db.query(
+                'SELECT max_amount, is_active FROM auto_bids WHERE auction_id = ? AND user_id = ?',
+                [auctionId, userId]
+            );
+            
+            if (autoBidRows.length > 0 && autoBidRows[0].is_active) {
+                userAutoBid = {
+                    max_amount: parseFloat(autoBidRows[0].max_amount),
+                    is_active: true
+                };
+            }
+        }
+        
+        // Add user's auto-bid to auction object if exists
+        if (userAutoBid) {
+            auction.user_auto_bid = userAutoBid;
+        }
+        
         // Return the auction
         response.sendSuccess(res, { auction: auction }, 'Auction retrieved successfully');
         

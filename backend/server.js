@@ -15,7 +15,7 @@ const profileRoutes = require('./routes/profile');
 const adminRoutes = require('./routes/admin');
 
 // Middleware
-const { authenticate, isAdmin } = require('./middleware/auth');
+const { authenticate, isAdmin, optionalAuth } = require('./middleware/auth');
 
 const app = express();
 const PORT = config.server.port || 3000;
@@ -58,7 +58,7 @@ app.use('/api/users', authenticate, userRoutes);
 // Auction Routes
 app.get('/api/auctions', auctionRoutes.getAllAuctions);
 app.post('/api/auctions', authenticate, uploadAuction.single('image'), auctionRoutes.createAuction);
-app.get('/api/auctions/:id', auctionRoutes.getAuctionById);
+app.get('/api/auctions/:id', optionalAuth, auctionRoutes.getAuctionById);
 app.get('/api/auctions/:id/image', auctionRoutes.getAuctionImage);
 app.put('/api/auctions/:id', authenticate, auctionRoutes.updateAuction);
 app.put('/api/auctions/:id', authenticate, auctionRoutes.updateAuction);
@@ -74,7 +74,6 @@ app.get('/api/profile', authenticate, profileRoutes.getProfile);
 app.put('/api/profile', authenticate, profileRoutes.updateProfile);
 app.get('/api/my/auctions', authenticate, profileRoutes.getMyAuctions);
 app.get('/api/my/bids', authenticate, profileRoutes.getMyBids);
-app.get('/api/my/auto-bids', authenticate, profileRoutes.getMyAutoBids);
 
 // Admin Routes
 app.get('/api/admin/stats', authenticate, isAdmin, adminRoutes.getStats);

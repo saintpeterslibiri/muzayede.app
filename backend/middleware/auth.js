@@ -48,8 +48,31 @@ const isUser = (req, res, next) => {
     }
 };
 
+// Optional authentication - doesn't fail if no token, just sets req.user if token is valid
+const optionalAuth = (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1] || req.headers['x-auth-token'];
+        
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, config.jwt.secret);
+                req.user = decoded;
+            } catch (error) {
+                // Invalid token, but continue without user
+                req.user = null;
+            }
+        }
+        next();
+    } catch (error) {
+        // Continue without user
+        req.user = null;
+        next();
+    }
+};
+
 module.exports = {
     authenticate,
     isAdmin,
-    isUser
+    isUser,
+    optionalAuth
 };
