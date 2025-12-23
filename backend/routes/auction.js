@@ -193,7 +193,7 @@ async function getAllAuctions(req, res) {
             countSql += ` AND a.status = ?`;
             countParams.push(status);
         } else {
-            countSql += ` AND a.status = 'active'`;
+            countSql += ` AND a.status = 'active' AND a.end_time > NOW()`;
         }
         
         if (q && q !== '') {
