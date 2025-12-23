@@ -9,6 +9,7 @@ services:
       MYSQL_DATABASE: muzayede_db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
+      TZ: Europe/Istanbul
     volumes:
       - db_data:/var/lib/mysql
     ports:
@@ -28,6 +29,7 @@ services:
       DB_PASSWORD: password
       DB_NAME: muzayede_db
       PORT: 3000
+      TZ: Europe/Istanbul
     ports:
       - "3000:3000"
     depends_on:

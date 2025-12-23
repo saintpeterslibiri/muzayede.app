@@ -11,8 +11,7 @@ const dbConfig = {
     waitForConnections: true,
     connectionLimit: config.database.connectionLimit || 10,
     queueLimit: 0,
-    charset: config.database.charset || 'utf8mb4',
-    timezone: 'Z' // Use UTC timezone to avoid timezone issues
+    charset: config.database.charset || 'utf8mb4'
 };
 
 // Create connection pool

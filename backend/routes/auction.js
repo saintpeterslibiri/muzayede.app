@@ -168,20 +168,8 @@ async function getAllAuctions(req, res) {
         // We only need rows, so we destructure with [rows]
         const [rows] = await db.query(sql, params);
 
-        // Additional filter: Remove expired auctions (double check in Node.js)
-        // This ensures we filter even if database timezone is different
-        const now = new Date();
-        const filteredRows = rows.filter(auction => {
-            // If status is 'active' or not specified, filter out expired auctions
-            if (!status || status === 'active') {
-                const endTime = new Date(auction.end_time);
-                return endTime > now;
-            }
-            return true; // Keep all if status is explicitly set to something other than 'active'
-        });
-
         // Map rows to include image URL
-        const auctions = filteredRows.map(auction => ({
+        const auctions = rows.map(auction => ({
             ...auction,
             image_path: auction.image_path || (auction.id ? `/api/auctions/${auction.id}/image` : null)
         }));

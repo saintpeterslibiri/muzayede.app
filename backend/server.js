@@ -86,25 +86,6 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// Debug endpoint to check database time vs server time
-app.get('/api/debug/time', async (req, res) => {
-    try {
-        const db = require('./config/database');
-        const [rows] = await db.query('SELECT NOW() as db_time, UTC_TIMESTAMP() as db_utc_time');
-        const serverTime = new Date();
-        
-        res.json({
-            server_time: serverTime.toISOString(),
-            server_time_local: serverTime.toString(),
-            database_time: rows[0].db_time,
-            database_utc_time: rows[0].db_utc_time,
-            timezone_offset: serverTime.getTimezoneOffset()
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
