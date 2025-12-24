@@ -40,13 +40,31 @@ const uploadAuction = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: function (req, file, cb) {
-        const allowedTypes = /jpeg|jpg|png|gif|webp/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
+        // Allowed file extensions
+        const allowedExtensions = /\.(jpeg|jpg|png|gif|webp)$/i;
+        // Allowed MIME types
+        const allowedMimeTypes = [
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/webp'
+        ];
+        
+        const extname = allowedExtensions.test(path.extname(file.originalname));
+        const mimetype = allowedMimeTypes.includes(file.mimetype.toLowerCase());
+        
         if (extname && mimetype) {
             return cb(null, true);
         } else {
-            cb(new Error('Only images are allowed!'));
+            console.log('File upload rejected:', {
+                filename: file.originalname,
+                mimetype: file.mimetype,
+                extname: path.extname(file.originalname),
+                extnameValid: extname,
+                mimetypeValid: mimetype
+            });
+            cb(new Error(`Only image files are allowed! (jpeg, jpg, png, gif, webp). Received: ${file.mimetype}`));
         }
     }
 });

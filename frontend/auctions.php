@@ -3,11 +3,14 @@ include 'includes/header.php';
 include 'includes/navbar.php';
 require_once 'includes/api_client.php';
 
-$response = api_get("/auctions");
+// İlk yüklemede sadece ilk sayfayı yükle (limit=12)
+$response = api_get("/auctions?page=1&limit=12");
 $auctions = [];
+$pagination = null;
 
 if (isset($response['success']) && $response['success'] === true) {
     $auctions = $response['data']['auctions'] ?? $response['data'] ?? [];
+    $pagination = $response['data']['pagination'] ?? null;
 }
 
 $categories = [];
@@ -148,6 +151,16 @@ $prefSort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'default';
             <?php endif; ?>
         </section>
 
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" style="text-align: center; padding: 20px; display: none;">
+            <p>Loading more auctions...</p>
+        </div>
+
+        <!-- End of list message -->
+        <div id="endOfList" style="text-align: center; padding: 20px; display: none;">
+            <p>No more auctions to load.</p>
+        </div>
+
         <script>
             const q = document.getElementById("q");
             const category = document.getElementById("category");
@@ -158,6 +171,21 @@ $prefSort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'default';
             const resetBtn = document.getElementById("resetBtn");
             const grid = document.getElementById("auctionGrid");
             const info = document.getElementById("filterInfo");
+            const loadingIndicator = document.getElementById("loadingIndicator");
+            const endOfList = document.getElementById("endOfList");
+
+            // Infinite scroll state
+            let currentPage = <?php echo $pagination ? $pagination['currentPage'] : 1; ?>;
+            let totalPages = <?php echo $pagination ? $pagination['totalPages'] : 1; ?>;
+            let isLoading = false;
+            let hasMorePages = <?php echo $pagination ? ($pagination['hasNextPage'] ? 'true' : 'false') : 'false'; ?>;
+            let currentFilters = {
+                search: '<?php echo htmlspecialchars($prefSearch, ENT_QUOTES); ?>',
+                category: '<?php echo htmlspecialchars($prefCategory, ENT_QUOTES); ?>',
+                min: '<?php echo htmlspecialchars($prefMin, ENT_QUOTES); ?>',
+                max: '<?php echo htmlspecialchars($prefMax, ENT_QUOTES); ?>',
+                sort: '<?php echo htmlspecialchars($prefSort, ENT_QUOTES); ?>'
+            };
 
             function n(v){
                 const x = parseFloat(v);
@@ -239,13 +267,254 @@ $prefSort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'default';
                 window.history.replaceState({}, "", url.toString());
             }
 
+            // Load more auctions via API
+            async function loadMoreAuctions() {
+                if (isLoading || !hasMorePages) return;
+
+                isLoading = true;
+                loadingIndicator.style.display = 'block';
+                endOfList.style.display = 'none';
+
+                try {
+                    const nextPage = currentPage + 1;
+                    const params = new URLSearchParams({
+                        page: nextPage,
+                        limit: '12'
+                    });
+
+                    // Add filters
+                    if (currentFilters.search) params.append('q', currentFilters.search);
+                    if (currentFilters.category) params.append('category', currentFilters.category);
+                    if (currentFilters.min) params.append('min', currentFilters.min);
+                    if (currentFilters.max) params.append('max', currentFilters.max);
+                    if (currentFilters.sort && currentFilters.sort !== 'default') {
+                        // Map frontend sort values to backend sort values
+                        const sortMap = {
+                            'priceAsc': 'lowest_bid',
+                            'priceDesc': 'highest_bid',
+                            'titleAsc': 'newest', // Backend doesn't have title sort, use newest
+                            'titleDesc': 'newest'
+                        };
+                        const backendSort = sortMap[currentFilters.sort] || currentFilters.sort;
+                        params.append('sort', backendSort);
+                    }
+
+                    const response = await fetch('<?php echo PUBLIC_API_URL; ?>/api/auctions?' + params.toString());
+                    const data = await response.json();
+
+                    if (data.success && data.data && data.data.auctions) {
+                        const newAuctions = data.data.auctions;
+                        const pagination = data.data.pagination;
+
+                        // Add new auction cards to grid
+                        newAuctions.forEach(item => {
+                            const card = createAuctionCard(item);
+                            grid.appendChild(card);
+                        });
+
+                        // Update state
+                        currentPage = pagination.currentPage;
+                        totalPages = pagination.totalPages;
+                        hasMorePages = pagination.hasNextPage;
+
+                        // Apply filters to new cards
+                        applyFilters();
+
+                        if (!hasMorePages) {
+                            endOfList.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading more auctions:', error);
+                } finally {
+                    isLoading = false;
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+
+            // Create auction card element
+            function createAuctionCard(item) {
+                const card = document.createElement('div');
+                card.className = 'auction-card';
+                card.dataset.title = (item.title || '').toLowerCase();
+                card.dataset.price = item.current_price || item.starting_price || 0;
+                card.dataset.category = (item.category || '').toLowerCase();
+
+                let image = item.image_path || 'assets/img/placeholder.png';
+                if (image.startsWith('/api/')) {
+                    image = '<?php echo PUBLIC_API_URL; ?>' + image;
+                }
+
+                const sellerUsername = item.seller_username || item.username || '';
+                const sellerId = item.seller_id || item.user_id || '';
+                let sellerHref = '';
+                if (sellerId) {
+                    sellerHref = `seller_profile.php?user_id=${encodeURIComponent(sellerId)}`;
+                } else if (sellerUsername) {
+                    sellerHref = `seller_profile.php?username=${encodeURIComponent(sellerUsername)}`;
+                }
+
+                card.innerHTML = `
+                    <div class="card-image">
+                        <img src="${escapeHtml(image)}" alt="Item">
+                    </div>
+                    <div class="card-content">
+                        <h3>${escapeHtml(item.title || 'No Title')}</h3>
+                        ${sellerHref && sellerUsername ? `
+                            <p class="time">
+                                Seller:
+                                <a class="view-all" href="${escapeHtml(sellerHref)}">
+                                    @${escapeHtml(sellerUsername)}
+                                </a>
+                            </p>
+                        ` : ''}
+                        <p class="price">Current Bid: $${formatNumber(item.current_price || item.starting_price || 0)}</p>
+                        <p class="time">Ends: ${escapeHtml(item.end_time || '')}</p>
+                        <a href="auction_detail.php?id=${item.id}" class="btn-secondary">View Details</a>
+                    </div>
+                `;
+
+                return card;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function formatNumber(num) {
+                return parseFloat(num).toFixed(2);
+            }
+
+            // Scroll event listener for infinite scroll
+            let scrollTimeout;
+            window.addEventListener('scroll', function() {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(function() {
+                    // Check if user scrolled near bottom (within 200px)
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const windowHeight = window.innerHeight;
+                    const documentHeight = document.documentElement.scrollHeight;
+
+                    if (documentHeight - (scrollTop + windowHeight) < 200) {
+                        loadMoreAuctions();
+                    }
+                }, 100);
+            });
+
+            // Reload auctions from API with new filters
+            async function reloadAuctions() {
+                isLoading = true;
+                loadingIndicator.style.display = 'block';
+                endOfList.style.display = 'none';
+
+                // Clear existing cards
+                grid.innerHTML = '';
+
+                try {
+                    const params = new URLSearchParams({
+                        page: '1',
+                        limit: '12'
+                    });
+
+                    // Add filters
+                    if (currentFilters.search) params.append('q', currentFilters.search);
+                    if (currentFilters.category) params.append('category', currentFilters.category);
+                    if (currentFilters.min) params.append('min', currentFilters.min);
+                    if (currentFilters.max) params.append('max', currentFilters.max);
+                    if (currentFilters.sort && currentFilters.sort !== 'default') {
+                        const sortMap = {
+                            'priceAsc': 'lowest_bid',
+                            'priceDesc': 'highest_bid',
+                            'titleAsc': 'newest',
+                            'titleDesc': 'newest'
+                        };
+                        const backendSort = sortMap[currentFilters.sort] || currentFilters.sort;
+                        params.append('sort', backendSort);
+                    }
+
+                    const response = await fetch('<?php echo PUBLIC_API_URL; ?>/api/auctions?' + params.toString());
+                    const data = await response.json();
+
+                    if (data.success && data.data && data.data.auctions) {
+                        const auctions = data.data.auctions;
+                        const pagination = data.data.pagination;
+
+                        if (auctions.length === 0) {
+                            grid.innerHTML = '<p class="empty-state">No active auctions found.</p>';
+                        } else {
+                            auctions.forEach(item => {
+                                const card = createAuctionCard(item);
+                                grid.appendChild(card);
+                            });
+                        }
+
+                        // Update state
+                        currentPage = pagination.currentPage;
+                        totalPages = pagination.totalPages;
+                        hasMorePages = pagination.hasNextPage;
+
+                        if (!hasMorePages && auctions.length > 0) {
+                            endOfList.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error reloading auctions:', error);
+                    grid.innerHTML = '<p class="empty-state">Error loading auctions. Please try again.</p>';
+                } finally {
+                    isLoading = false;
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+
+            // Update filters when search button is clicked
             searchBtn.onclick = function(){
+                // Reset pagination when filters change
+                currentPage = 1;
+                hasMorePages = true;
+                endOfList.style.display = 'none';
+                
+                // Update current filters
+                currentFilters = {
+                    search: (q.value || "").trim(),
+                    category: (category.value || "").trim(),
+                    min: (minPrice.value || "").trim(),
+                    max: (maxPrice.value || "").trim(),
+                    sort: (sortBy.value || "default").trim()
+                };
+
                 syncUrl();
-                applyFilters();
+                reloadAuctions();
             };
 
             resetBtn.onclick = function(){
-                resetFilters();
+                // Reset form values
+                q.value = "";
+                category.value = "";
+                minPrice.value = "";
+                maxPrice.value = "";
+                sortBy.value = "default";
+                
+                // Reset pagination and filters
+                currentPage = 1;
+                hasMorePages = true;
+                endOfList.style.display = 'none';
+                currentFilters = {
+                    search: '',
+                    category: '',
+                    min: '',
+                    max: '',
+                    sort: 'default'
+                };
+
+                // Update URL
+                const url = new URL(window.location.href);
+                ["search","category","min","max","sort"].forEach(k => url.searchParams.delete(k));
+                window.history.replaceState({}, "", url.toString());
+
+                // Reload auctions
+                reloadAuctions();
             };
 
             q.addEventListener("keydown", function(e){

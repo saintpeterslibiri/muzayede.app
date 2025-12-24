@@ -369,6 +369,14 @@ async function getAuctionImage(req, res) {
 
 async function createAuction(req, res) {
     console.log('POST /api/auctions - Request received');
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        bufferLength: req.file.buffer ? req.file.buffer.length : 0
+    } : 'No file');
+    
     try {
         // Get data from request body
         // req.body was set in server.js by parseRequestBody()
@@ -380,8 +388,13 @@ async function createAuction(req, res) {
         
         if (req.file) {
             console.log(`Image uploaded: ${req.file.originalname}, size: ${req.file.size}, mimetype: ${req.file.mimetype}`);
-            imageData = req.file.buffer;
-            imageMimeType = req.file.mimetype;
+            if (req.file.buffer && req.file.buffer.length > 0) {
+                imageData = req.file.buffer;
+                imageMimeType = req.file.mimetype;
+                console.log(`Image data set: ${imageData.length} bytes, mime type: ${imageMimeType}`);
+            } else {
+                console.error('File buffer is empty or invalid');
+            }
         } else {
             console.log('No image file received in request');
         }

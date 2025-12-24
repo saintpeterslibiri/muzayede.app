@@ -121,9 +121,29 @@ function api_post_multipart($endpoint, $fields = [], $files = []) {
     
     // Add files
     foreach ($files as $key => $fileInfo) {
-        // fileInfo should be ['path' => '/tmp/php...', 'name' => 'filename.jpg', 'type' => 'image/jpeg']
+        // fileInfo should be ['tmp_name' => '/tmp/php...', 'name' => 'filename.jpg', 'type' => 'image/jpeg']
         if (isset($fileInfo['tmp_name']) && file_exists($fileInfo['tmp_name'])) {
-            $payload[$key] = new CURLFile($fileInfo['tmp_name'], $fileInfo['type'], $fileInfo['name']);
+            // Ensure mimetype is set correctly
+            $mimeType = $fileInfo['type'] ?? 'application/octet-stream';
+            
+            // Fix common mimetype issues
+            if (empty($mimeType) || $mimeType === 'application/octet-stream') {
+                $extension = strtolower(pathinfo($fileInfo['name'], PATHINFO_EXTENSION));
+                $mimeMap = [
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'gif' => 'image/gif',
+                    'webp' => 'image/webp'
+                ];
+                $mimeType = $mimeMap[$extension] ?? 'application/octet-stream';
+            }
+            
+            $payload[$key] = new CURLFile(
+                $fileInfo['tmp_name'],
+                $mimeType,
+                $fileInfo['name']
+            );
         }
     }
 
